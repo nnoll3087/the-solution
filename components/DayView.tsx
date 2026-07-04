@@ -5,12 +5,13 @@ import { NormalizedEvent } from '@/lib/events';
 type Props = {
   events: NormalizedEvent[];
   day: Date;
+  onEventClick?: (event: NormalizedEvent) => void;
 };
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export function DayView({ events, day }: Props) {
+export function DayView({ events, day, onEventClick }: Props) {
   const today = new Date();
   const isToday = today.toDateString() === day.toDateString();
 
@@ -44,9 +45,9 @@ export function DayView({ events, day }: Props) {
       {allDayEvents.length > 0 && (
         <div className="px-4 py-2 border-b border-slate-800 space-y-1">
           {allDayEvents.map((event) => (
-            <div key={event.id} className="rounded px-2 py-1 text-sm" style={{ backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}>
+            <button key={event.id} onClick={() => onEventClick && onEventClick(event)} className="block w-full text-left rounded px-2 py-1 text-sm hover:brightness-125 transition" style={{ backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}>
               {event.title}
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -68,9 +69,9 @@ export function DayView({ events, day }: Props) {
             const top = startHours * 64;
             const height = Math.max((endHours - startHours) * 64, 24);
             return (
-              <div key={event.id} className="absolute left-2 right-2 rounded px-2 py-1 text-sm" style={{ top: top + 'px', height: height + 'px', backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}>
+              <button key={event.id} onClick={() => onEventClick && onEventClick(event)} className="absolute left-2 right-2 rounded px-2 py-1 text-sm text-left hover:brightness-125 transition" style={{ top: top + 'px', height: height + 'px', backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}>
                 <div className="font-medium truncate">{event.title}</div>
-              </div>
+              </button>
             );
           })}
         </div>

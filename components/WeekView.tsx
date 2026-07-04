@@ -5,12 +5,13 @@ import { NormalizedEvent } from '@/lib/events';
 type Props = {
   events: NormalizedEvent[];
   weekStart: Date;
+  onEventClick?: (event: NormalizedEvent) => void;
 };
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export function WeekView({ events, weekStart }: Props) {
+export function WeekView({ events, weekStart, onEventClick }: Props) {
   const today = new Date();
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStart);
@@ -71,9 +72,9 @@ export function WeekView({ events, weekStart }: Props) {
                 const evEnd = new Date(event.end);
                 if (event.allDay) {
                   return (
-                    <div key={event.id} className="absolute left-1 right-1 top-0 rounded px-1.5 py-0.5 text-xs truncate" style={{ backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}>
+                    <button key={event.id} onClick={() => onEventClick && onEventClick(event)} className="absolute left-1 right-1 top-0 rounded px-1.5 py-0.5 text-xs truncate text-left hover:brightness-125 transition" style={{ backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}>
                       {event.title}
-                    </div>
+                    </button>
                   );
                 }
                 const startHours = evStart.getHours() + evStart.getMinutes() / 60;
@@ -81,9 +82,9 @@ export function WeekView({ events, weekStart }: Props) {
                 const top = startHours * 64;
                 const height = Math.max((endHours - startHours) * 64, 20);
                 return (
-                  <div key={event.id} className="absolute left-1 right-1 rounded px-1.5 py-0.5 text-xs truncate" style={{ top: top + 'px', height: height + 'px', backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}>
+                  <button key={event.id} onClick={() => onEventClick && onEventClick(event)} className="absolute left-1 right-1 rounded px-1.5 py-0.5 text-xs truncate text-left hover:brightness-125 transition" style={{ top: top + 'px', height: height + 'px', backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}>
                     {event.title}
-                  </div>
+                  </button>
                 );
               })}
             </div>

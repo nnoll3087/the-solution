@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { MonthView } from './MonthView';
 import { WeekView } from './WeekView';
 import { DayView } from './DayView';
+import { EventModal } from './EventModal';
 import { NormalizedEvent } from '@/lib/events';
 
 type ViewMode = 'month' | 'week' | 'day';
@@ -13,6 +14,7 @@ export function Calendar() {
   const [view, setView] = useState<ViewMode>('month');
   const [events, setEvents] = useState<NormalizedEvent[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<NormalizedEvent | null>(null);
 
   const year = current.getFullYear();
   const month = current.getMonth();
@@ -91,10 +93,11 @@ export function Calendar() {
         </div>
       </div>
       <div className={loading ? 'opacity-50 transition-opacity' : 'transition-opacity'}>
-        {view === 'month' && <MonthView events={events} year={year} month={month} />}
-        {view === 'week' && <WeekView events={events} weekStart={weekStart} />}
-        {view === 'day' && <DayView events={events} day={current} />}
+        {view === 'month' && <MonthView events={events} year={year} month={month} onEventClick={setSelectedEvent} />}
+        {view === 'week' && <WeekView events={events} weekStart={weekStart} onEventClick={setSelectedEvent} />}
+        {view === 'day' && <DayView events={events} day={current} onEventClick={setSelectedEvent} />}
       </div>
+      <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </div>
   );
 }
