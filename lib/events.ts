@@ -68,5 +68,14 @@ export async function fetchAllEvents(timeMin: Date, timeMax: Date): Promise<Norm
   const results = await Promise.all(
     enabled.map((cal) => fetchEventsForCalendar(cal, timeMin.toISOString(), timeMax.toISOString()))
   );
-  return results.flat();
+  const flat = results.flat();
+  const seen = new Set<string>();
+  const deduped: NormalizedEvent[] = [];
+  for (const event of flat) {
+    const key = event.id;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(event);
+  }
+  return deduped;
 }

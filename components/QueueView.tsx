@@ -290,9 +290,9 @@ function QueueSettings({
           <div className="text-sm text-slate-400 mb-2">Per person overrides</div>
           <div className="space-y-2">
             {people.map((person) => {
-              const pref = getPersonPref(person);
-              const mode = pref?.clearMode ?? 'default';
-              const hours = pref?.clearAfterHours ?? defaultHours;
+const pref = getPersonPref(person);
+const mode: ClearMode = pref?.clearMode ?? defaultMode;
+const hours = pref?.clearAfterHours ?? defaultHours;
               return (
                 <div key={person} className="flex items-center gap-2 text-sm">
                   <span className="text-slate-200 w-24">{person}</span>

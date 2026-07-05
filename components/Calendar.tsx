@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { MonthView } from './MonthView';
 import { WeekView } from './WeekView';
 import { DayView } from './DayView';
 import { EventModal } from './EventModal';
+import { EventFormPanel } from './EventFormPanel';
 import { NormalizedEvent } from '@/lib/events';
 
 type ViewMode = 'month' | 'week' | 'day';
@@ -15,11 +16,14 @@ export function Calendar() {
   const [events, setEvents] = useState<NormalizedEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<NormalizedEvent | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [formInitialStart, setFormInitialStart] = useState<Date | undefined>(undefined);
+  const [formEditing, setFormEditing] = useState<NormalizedEvent | null>(null);
 
   const year = current.getFullYear();
   const month = current.getMonth();
 
-  function getRange(): [Date, Date] {
+  const getRange = useCallback((): [Date, Date] => {
     if (view === 'month') {
       return [new Date(year, month, 1), new Date(year, month + 1, 0, 23, 59, 59)];
     }
@@ -35,16 +39,20 @@ export function Calendar() {
     const ds = new Date(current); ds.setHours(0, 0, 0, 0);
     const de = new Date(current); de.setHours(23, 59, 59, 999);
     return [ds, de];
-  }
+  }, [view, year, month, current]);
 
-  useEffect(() => {
+  const loadEvents = useCallback(() => {
     const [tMin, tMax] = getRange();
     setLoading(true);
     fetch('/api/events?timeMin=' + encodeURIComponent(tMin.toISOString()) + '&timeMax=' + encodeURIComponent(tMax.toISOString()))
       .then((r) => r.json())
       .then((data) => setEvents(data.events || []))
       .finally(() => setLoading(false));
-  }, [current.getTime(), view]);
+  }, [getRange]);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   function goPrev() {
     const d = new Date(current);
@@ -61,6 +69,24 @@ export function Calendar() {
     setCurrent(d);
   }
   function goToday() { setCurrent(new Date()); }
+
+  function openCreateForm(initialStart?: Date) {
+    setFormEditing(null);
+    setFormInitialStart(initialStart);
+    setFormOpen(true);
+  }
+
+  function openEditForm(event: NormalizedEvent) {
+    setSelectedEvent(null);
+    setFormEditing(event);
+    setFormInitialStart(undefined);
+    setFormOpen(true);
+  }
+
+  function closeForm() {
+    setFormOpen(false);
+    setFormEditing(null);
+  }
 
   function headerLabel(): string {
     if (view === 'month') return current.toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -82,6 +108,7 @@ export function Calendar() {
       <div className="flex items-center justify-between mb-4">
         <div className="text-2xl font-semibold text-slate-200">{headerLabel()}</div>
         <div className="flex items-center gap-2">
+          <button onClick={() => openCreateForm()} className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium mr-2">+ New event</button>
           <div className="flex rounded-lg overflow-hidden border border-slate-800 mr-2">
             <button onClick={() => setView('month')} className={'px-3 py-2 text-sm capitalize ' + (view === 'month' ? 'bg-blue-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-300')}>month</button>
             <button onClick={() => setView('week')} className={'px-3 py-2 text-sm capitalize ' + (view === 'week' ? 'bg-blue-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-300')}>week</button>
@@ -93,11 +120,23 @@ export function Calendar() {
         </div>
       </div>
       <div className={loading ? 'opacity-50 transition-opacity' : 'transition-opacity'}>
-        {view === 'month' && <MonthView events={events} year={year} month={month} onEventClick={setSelectedEvent} />}
-        {view === 'week' && <WeekView events={events} weekStart={weekStart} onEventClick={setSelectedEvent} />}
-        {view === 'day' && <DayView events={events} day={current} onEventClick={setSelectedEvent} />}
+        {view === 'month' && <MonthView events={events} year={year} month={month} onEventClick={setSelectedEvent} onDayClick={(d) => openCreateForm(d)} />}
+        {view === 'week' && <WeekView events={events} weekStart={weekStart} onEventClick={setSelectedEvent} onSlotClick={(d) => openCreateForm(d)} />}
+        {view === 'day' && <DayView events={events} day={current} onEventClick={setSelectedEvent} onSlotClick={(d) => openCreateForm(d)} />}
       </div>
-      <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+      <EventModal
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+        onEdit={openEditForm}
+        onDeleted={loadEvents}
+      />
+      <EventFormPanel
+        open={formOpen}
+        onClose={closeForm}
+        onSaved={loadEvents}
+        initialStart={formInitialStart}
+        existingEvent={formEditing}
+      />
     </div>
   );
 }

@@ -7,11 +7,12 @@ type Props = {
   year: number;
   month: number;
   onEventClick?: (event: NormalizedEvent) => void;
+  onDayClick?: (date: Date) => void;
 };
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export function MonthView({ events, year, month, onEventClick }: Props) {
+export function MonthView({ events, year, month, onEventClick, onDayClick }: Props) {
   const firstOfMonth = new Date(year, month, 1);
   const startDayOfWeek = firstOfMonth.getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -34,6 +35,13 @@ export function MonthView({ events, year, month, onEventClick }: Props) {
     });
   }
 
+  function handleDayClick(day: number) {
+    if (!onDayClick) return;
+    const d = new Date(year, month, day);
+    d.setHours(9, 0, 0, 0);
+    onDayClick(d);
+  }
+
   return (
     <div className="bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
       <div className="grid grid-cols-7 border-b border-slate-800">
@@ -46,7 +54,11 @@ export function MonthView({ events, year, month, onEventClick }: Props) {
           const isToday = isCurrentMonth && day === todayDate;
           const dayEvents = day ? eventsForDay(day) : [];
           return (
-            <div key={idx} className={'min-h-[120px] border-b border-r border-slate-800 p-2 ' + (day ? 'bg-slate-950' : 'bg-slate-900/40')}>
+            <div
+              key={idx}
+              onClick={day ? () => handleDayClick(day) : undefined}
+              className={'min-h-[120px] border-b border-r border-slate-800 p-2 ' + (day ? 'bg-slate-950 cursor-pointer hover:bg-slate-900/60 transition' : 'bg-slate-900/40')}
+            >
               {day && (
                 <>
                   <div className={'text-sm font-medium mb-1 ' + (isToday ? 'text-blue-400' : 'text-slate-300')}>
@@ -56,7 +68,12 @@ export function MonthView({ events, year, month, onEventClick }: Props) {
                   </div>
                   <div className="space-y-1">
                     {dayEvents.slice(0, 3).map((event) => (
-                      <button key={event.id} onClick={() => onEventClick && onEventClick(event)} className="block w-full text-left text-xs truncate rounded px-1.5 py-0.5 hover:brightness-125 transition" style={{ backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}>
+                      <button
+                        key={event.id}
+                        onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(event); }}
+                        className="block w-full text-left text-xs truncate rounded px-1.5 py-0.5 hover:brightness-125 transition"
+                        style={{ backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}
+                      >
                         {event.title}
                       </button>
                     ))}
