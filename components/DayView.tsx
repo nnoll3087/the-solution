@@ -103,13 +103,13 @@ export function DayView({ events, day, onEventClick, onSlotClick }: Props) {
   const positioned = layoutTimedEvents(dayEvents);
 
   return (
-    <div className="bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
-      <div className="px-4 py-3 border-b border-slate-800 flex items-baseline gap-3">
-        <div className={'text-3xl font-bold ' + (isToday ? 'text-blue-400' : 'text-slate-100')}>{day.getDate()}</div>
-        <div className="text-lg text-slate-400">{DAY_LABELS[day.getDay()]}, {day.toLocaleString('default', { month: 'long' })}</div>
+    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-hidden">
+      <div className="px-4 py-3 border-b border-border-themed flex items-baseline gap-3">
+        <div className={'text-3xl font-bold ' + (isToday ? 'text-accent' : 'text-text')}>{day.getDate()}</div>
+        <div className="text-lg text-text-muted">{DAY_LABELS[day.getDay()]}, {day.toLocaleString('default', { month: 'long' })}</div>
       </div>
       {allDayEvents.length > 0 && (
-        <div className="px-4 py-2 border-b border-slate-800 space-y-1">
+        <div className="px-4 py-2 border-b border-border-themed space-y-1">
           {allDayEvents.map((event, i) => (
             <button
               key={'day-allday-' + i + '-' + event.id}
@@ -125,15 +125,15 @@ export function DayView({ events, day, onEventClick, onSlotClick }: Props) {
       <div className="grid grid-cols-[80px_1fr] max-h-[70vh] overflow-y-auto">
         <div>
           {HOURS.map((h) => (
-            <div key={h} className="h-16 border-b border-slate-800 px-2 py-1 text-xs text-slate-500 text-right">{formatHour(h)}</div>
+            <div key={h} className="h-16 border-b border-border-themed px-2 py-1 text-xs text-text-subtle text-right">{formatHour(h)}</div>
           ))}
         </div>
-        <div className="relative border-l border-slate-800">
+        <div className="relative border-l border-border-themed">
           {HOURS.map((h) => (
             <div
               key={h}
               onClick={() => handleSlotClick(h)}
-              className="h-16 border-b border-slate-800 cursor-pointer hover:bg-slate-800/40 transition"
+              className="h-16 border-b border-border-themed cursor-pointer hover:bg-surface-elevated/40 transition"
             />
           ))}
           {positioned.map((p, i) => (

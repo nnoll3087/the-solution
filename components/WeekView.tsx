@@ -28,9 +28,7 @@ function layoutTimedEvents(events: NormalizedEvent[]): PositionedEvent[] {
   }));
   timed.sort((a, b) => a.start - b.start || b.end - a.end);
 
-  const columns: (typeof timed[number] & { column: number })[][] = [];
   const positioned: PositionedEvent[] = [];
-
   const clusters: (typeof timed[number] & { column: number })[][] = [];
   let currentCluster: (typeof timed[number] & { column: number })[] = [];
   let currentClusterEnd = 0;
@@ -109,15 +107,15 @@ export function WeekView({ events, weekStart, onEventClick, onSlotClick }: Props
   }
 
   return (
-    <div className="bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
-      <div className="grid grid-cols-8 border-b border-slate-800">
-        <div className="px-2 py-2 text-xs text-slate-500"></div>
+    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-hidden">
+      <div className="grid grid-cols-8 border-b border-border-themed">
+        <div className="px-2 py-2 text-xs text-text-subtle"></div>
         {days.map((d, i) => {
           const isToday = isSameDay(d, today);
           return (
-            <div key={i} className="px-2 py-2 text-center border-l border-slate-800">
-              <div className="text-xs text-slate-400 uppercase tracking-wide">{DAY_LABELS[d.getDay()]}</div>
-              <div className={'text-lg font-semibold ' + (isToday ? 'text-blue-400' : 'text-slate-200')}>{d.getDate()}</div>
+            <div key={i} className="px-2 py-2 text-center border-l border-border-themed">
+              <div className="text-xs text-text-muted uppercase tracking-wide">{DAY_LABELS[d.getDay()]}</div>
+              <div className={'text-lg font-semibold ' + (isToday ? 'text-accent' : 'text-text')}>{d.getDate()}</div>
             </div>
           );
         })}
@@ -125,7 +123,7 @@ export function WeekView({ events, weekStart, onEventClick, onSlotClick }: Props
       <div className="grid grid-cols-8 max-h-[70vh] overflow-y-auto">
         <div>
           {HOURS.map((h) => (
-            <div key={h} className="h-16 border-b border-slate-800 px-2 py-1 text-xs text-slate-500 text-right">{formatHour(h)}</div>
+            <div key={h} className="h-16 border-b border-border-themed px-2 py-1 text-xs text-text-subtle text-right">{formatHour(h)}</div>
           ))}
         </div>
         {days.map((day, di) => {
@@ -133,12 +131,12 @@ export function WeekView({ events, weekStart, onEventClick, onSlotClick }: Props
           const allDay = dayEvents.filter((e) => e.allDay);
           const positioned = layoutTimedEvents(dayEvents);
           return (
-            <div key={di} className="relative border-l border-slate-800">
+            <div key={di} className="relative border-l border-border-themed">
               {HOURS.map((h) => (
                 <div
                   key={h}
                   onClick={() => handleSlotClick(day, h)}
-                  className="h-16 border-b border-slate-800 cursor-pointer hover:bg-slate-800/40 transition"
+                  className="h-16 border-b border-border-themed cursor-pointer hover:bg-surface-elevated/40 transition"
                 />
               ))}
               {allDay.map((event, i) => (

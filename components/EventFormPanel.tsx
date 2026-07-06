@@ -223,25 +223,28 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
 
   if (!open) return null;
 
+  const inputCls = 'w-full bg-bg border border-border-themed rounded-md px-3 py-2 text-text text-sm';
+  const labelCls = 'block text-xs uppercase tracking-wide text-text-muted mb-1';
+
   return (
     <>
       <div onClick={onClose} className="fixed inset-0 bg-black/60 z-40" />
-      <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-slate-900 border-l border-slate-800 z-50 overflow-y-auto shadow-2xl">
-        <div className="sticky top-0 bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-slate-100">{isEdit ? 'Edit event' : 'New event'}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-200 text-2xl leading-none">×</button>
+      <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-surface-elevated border-l border-border-themed z-50 overflow-y-auto shadow-2xl">
+        <div className="sticky top-0 bg-surface-elevated border-b border-border-themed px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-text">{isEdit ? 'Edit event' : 'New event'}</h2>
+          <button onClick={onClose} className="text-text-muted hover:text-text text-2xl leading-none">×</button>
         </div>
 
         <div className="p-6 space-y-5">
           {error && (
-            <div className="bg-rose-950 border border-rose-800 rounded-md px-3 py-2 text-sm text-rose-200">
+            <div className="bg-danger-themed/20 border border-danger-themed/40 rounded-md px-3 py-2 text-sm text-danger-themed">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">Calendar</label>
-            <select value={calendarKey} onChange={(e) => setCalendarKey(e.target.value)} disabled={isEdit} className="w-full bg-slate-950 border border-slate-800 rounded-md px-3 py-2 text-slate-100 text-sm disabled:opacity-60">
+            <label className={labelCls}>Calendar</label>
+            <select value={calendarKey} onChange={(e) => setCalendarKey(e.target.value)} disabled={isEdit} className={inputCls + ' disabled:opacity-60'}>
               {calendars.map((c) => (
                 <option key={c.accountEmail + '::' + c.calendarId} value={c.accountEmail + '::' + c.calendarId}>
                   {c.displayName}
@@ -249,59 +252,59 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
               ))}
             </select>
             {isEdit && (
-              <p className="text-xs text-slate-500 mt-1">Calendar can&apos;t be changed on existing events.</p>
+              <p className="text-xs text-text-subtle mt-1">Calendar can&apos;t be changed on existing events.</p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">Title</label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-md px-3 py-2 text-slate-100 text-sm" placeholder="What's happening?" />
+            <label className={labelCls}>Title</label>
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} placeholder="What's happening?" />
           </div>
 
           <div className="flex items-center gap-2">
-            <input type="checkbox" id="allDay" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="w-4 h-4 accent-blue-500" />
-            <label htmlFor="allDay" className="text-sm text-slate-300">All day</label>
+            <input type="checkbox" id="allDay" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="w-4 h-4 accent-[var(--theme-accent)]" />
+            <label htmlFor="allDay" className="text-sm text-text">All day</label>
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">Starts</label>
+            <label className={labelCls}>Starts</label>
             <div className="flex gap-2">
-              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="flex-1 bg-slate-950 border border-slate-800 rounded-md px-3 py-2 text-slate-100 text-sm" />
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={'flex-1 ' + inputCls} />
               {!allDay && (
-                <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-32 bg-slate-950 border border-slate-800 rounded-md px-3 py-2 text-slate-100 text-sm" />
+                <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={'w-32 ' + inputCls} />
               )}
             </div>
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">Ends</label>
+            <label className={labelCls}>Ends</label>
             <div className="flex gap-2">
-              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="flex-1 bg-slate-950 border border-slate-800 rounded-md px-3 py-2 text-slate-100 text-sm" />
+              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={'flex-1 ' + inputCls} />
               {!allDay && (
-                <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-32 bg-slate-950 border border-slate-800 rounded-md px-3 py-2 text-slate-100 text-sm" />
+                <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className={'w-32 ' + inputCls} />
               )}
             </div>
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">Location</label>
-            <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-md px-3 py-2 text-slate-100 text-sm" placeholder="Optional" />
+            <label className={labelCls}>Location</label>
+            <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className={inputCls} placeholder="Optional" />
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">Description</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full bg-slate-950 border border-slate-800 rounded-md px-3 py-2 text-slate-100 text-sm resize-none" placeholder="Optional" />
+            <label className={labelCls}>Description</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputCls + ' resize-none'} placeholder="Optional" />
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">Attendees</label>
-            <input type="text" value={attendees} onChange={(e) => setAttendees(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-md px-3 py-2 text-slate-100 text-sm" placeholder="Comma-separated emails" />
-            <p className="text-xs text-slate-500 mt-1">Attendees will receive an email invite.</p>
+            <label className={labelCls}>Attendees</label>
+            <input type="text" value={attendees} onChange={(e) => setAttendees(e.target.value)} className={inputCls} placeholder="Comma-separated emails" />
+            <p className="text-xs text-text-subtle mt-1">Attendees will receive an email invite.</p>
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-wide text-slate-400 mb-1">Recurrence</label>
-            <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-md px-3 py-2 text-slate-100 text-sm">
+            <label className={labelCls}>Recurrence</label>
+            <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)} className={inputCls}>
               {RECURRENCE_OPTIONS.map((r) => (
                 <option key={r.value} value={r.value}>{r.label}</option>
               ))}
@@ -310,35 +313,35 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs uppercase tracking-wide text-slate-400">Reminders</label>
-              <button onClick={addReminder} className="text-xs text-blue-400 hover:text-blue-300">+ Add</button>
+              <label className={labelCls}>Reminders</label>
+              <button onClick={addReminder} className="text-xs text-accent hover:brightness-125">+ Add</button>
             </div>
             <div className="space-y-2">
               {reminders.map((r, i) => (
                 <div key={i} className="flex gap-2 items-center">
-                  <select value={r.method} onChange={(e) => updateReminder(i, { method: e.target.value as 'email' | 'popup' })} className="bg-slate-950 border border-slate-800 rounded-md px-2 py-1.5 text-slate-100 text-sm">
+                  <select value={r.method} onChange={(e) => updateReminder(i, { method: e.target.value as 'email' | 'popup' })} className="bg-bg border border-border-themed rounded-md px-2 py-1.5 text-text text-sm">
                     <option value="popup">Notification</option>
                     <option value="email">Email</option>
                   </select>
-                  <select value={r.minutes} onChange={(e) => updateReminder(i, { minutes: parseInt(e.target.value) })} className="flex-1 bg-slate-950 border border-slate-800 rounded-md px-2 py-1.5 text-slate-100 text-sm">
+                  <select value={r.minutes} onChange={(e) => updateReminder(i, { minutes: parseInt(e.target.value) })} className="flex-1 bg-bg border border-border-themed rounded-md px-2 py-1.5 text-text text-sm">
                     {REMINDER_PRESETS.map((p) => (
                       <option key={p.minutes} value={p.minutes}>{p.label}</option>
                     ))}
                   </select>
-                  <button onClick={() => removeReminder(i)} className="text-slate-500 hover:text-slate-300 text-sm px-1">×</button>
+                  <button onClick={() => removeReminder(i)} className="text-text-subtle hover:text-text text-sm px-1">×</button>
                 </div>
               ))}
               {reminders.length === 0 && (
-                <p className="text-xs text-slate-500">No reminders. Default will be used.</p>
+                <p className="text-xs text-text-subtle">No reminders. Default will be used.</p>
               )}
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-800 flex gap-2">
-            <button onClick={onClose} disabled={saving} className="flex-1 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm">
+          <div className="pt-4 border-t border-border-themed flex gap-2">
+            <button onClick={onClose} disabled={saving} className="flex-1 px-4 py-2 rounded-lg bg-surface hover:bg-bg text-text text-sm">
               Cancel
             </button>
-            <button onClick={submit} disabled={saving} className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium disabled:opacity-50">
+            <button onClick={submit} disabled={saving} className="flex-1 px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-medium disabled:opacity-50">
               {saving ? (isEdit ? 'Saving...' : 'Creating...') : (isEdit ? 'Save changes' : 'Create event')}
             </button>
           </div>

@@ -43,10 +43,10 @@ export function MonthView({ events, year, month, onEventClick, onDayClick }: Pro
   }
 
   return (
-    <div className="bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
-      <div className="grid grid-cols-7 border-b border-slate-800">
+    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-hidden">
+      <div className="grid grid-cols-7 border-b border-border-themed">
         {DAY_LABELS.map((label) => (
-          <div key={label} className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide text-center">{label}</div>
+          <div key={label} className="px-3 py-2 text-xs font-semibold text-text-muted uppercase tracking-wide text-center">{label}</div>
         ))}
       </div>
       <div className="grid grid-cols-7">
@@ -57,13 +57,13 @@ export function MonthView({ events, year, month, onEventClick, onDayClick }: Pro
             <div
               key={idx}
               onClick={day ? () => handleDayClick(day) : undefined}
-              className={'min-h-[120px] border-b border-r border-slate-800 p-2 ' + (day ? 'bg-slate-950 cursor-pointer hover:bg-slate-900/60 transition' : 'bg-slate-900/40')}
+              className={'min-h-[120px] border-b border-r border-border-themed p-2 ' + (day ? 'bg-bg/60 cursor-pointer hover:bg-surface/70 transition' : 'bg-surface/30')}
             >
               {day && (
                 <>
-                  <div className={'text-sm font-medium mb-1 ' + (isToday ? 'text-blue-400' : 'text-slate-300')}>
+                  <div className={'text-sm font-medium mb-1 ' + (isToday ? 'text-accent' : 'text-text-muted')}>
                     {isToday ? (
-                      <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-500 text-white rounded-full text-xs">{day}</span>
+                      <span className="inline-flex items-center justify-center w-6 h-6 bg-accent text-white rounded-full text-xs">{day}</span>
                     ) : (day)}
                   </div>
                   <div className="space-y-1">
@@ -78,7 +78,7 @@ export function MonthView({ events, year, month, onEventClick, onDayClick }: Pro
                       </button>
                     ))}
                     {dayEvents.length > 3 && (
-                      <div className="text-xs text-slate-500 px-1.5">+{dayEvents.length - 3} more</div>
+                      <div className="text-xs text-text-subtle px-1.5">+{dayEvents.length - 3} more</div>
                     )}
                   </div>
                 </>

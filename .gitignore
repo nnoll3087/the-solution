@@ -44,3 +44,4 @@ next-env.d.ts
 .snapshots.json
 .queue.json
 .queue-prefs.json
+.theme.json

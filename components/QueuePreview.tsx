@@ -43,20 +43,20 @@ export function QueuePreview() {
   const people = Object.keys(byPerson).sort();
 
   return (
-    <div className="bg-slate-900 rounded-lg border border-slate-800 p-4">
+    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed p-4">
       <div className="flex items-baseline justify-between mb-3">
-        <h2 className="text-lg font-semibold text-slate-100">What&apos;s new</h2>
-        <a href="/queue" className="text-xs text-blue-400 hover:text-blue-300">
+        <h2 className="text-lg font-semibold text-text">What&apos;s new</h2>
+        <a href="/queue" className="text-xs text-accent hover:brightness-125">
           View all
         </a>
       </div>
 
       {loading && active.length === 0 && (
-        <p className="text-sm text-slate-500">Checking for updates...</p>
+        <p className="text-sm text-text-subtle">Checking for updates...</p>
       )}
 
       {!loading && active.length === 0 && (
-        <p className="text-sm text-slate-500">All caught up.</p>
+        <p className="text-sm text-text-subtle">All caught up.</p>
       )}
 
       {active.length > 0 && (
@@ -71,9 +71,9 @@ export function QueuePreview() {
             if (changes) parts.push(changes + ' changed');
             if (deletes) parts.push(deletes + ' removed');
             return (
-              <li key={person} className="flex items-center justify-between bg-slate-950 rounded-md px-3 py-2 border border-slate-800">
-                <span className="text-sm font-medium text-slate-200">{person}</span>
-                <span className="text-xs text-slate-400">{parts.join(', ')}</span>
+              <li key={person} className="flex items-center justify-between bg-bg/60 rounded-md px-3 py-2 border border-border-themed">
+                <span className="text-sm font-medium text-text">{person}</span>
+                <span className="text-xs text-text-muted">{parts.join(', ')}</span>
               </li>
             );
           })}
