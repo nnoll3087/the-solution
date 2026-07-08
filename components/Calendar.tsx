@@ -4,15 +4,66 @@ import { useEffect, useState, useCallback } from 'react';
 import { MonthView } from './MonthView';
 import { WeekView } from './WeekView';
 import { DayView } from './DayView';
+import { AgendaView } from './AgendaView';
 import { EventModal } from './EventModal';
 import { EventFormPanel } from './EventFormPanel';
 import { NormalizedEvent } from '@/lib/events';
 
-type ViewMode = 'month' | 'week' | 'day';
+type ViewMode = 'agenda' | 'day' | 'week' | 'month';
+
+type CalendarOption = {
+  accountEmail: string;
+  calendarId: string;
+  displayName: string;
+  color: string;
+};
+
+const AGENDA_DAYS = 14;
+const FILTER_STORAGE_KEY = 'solution-person-filter';
 
 export function Calendar() {
   const [current, setCurrent] = useState<Date>(new Date());
   const [view, setView] = useState<ViewMode>('month');
+  const [calendars, setCalendars] = useState<CalendarOption[]>([]);
+  // null = everyone (no filter applied yet / Family)
+  const [selectedKeys, setSelectedKeys] = useState<Set<string> | null>(null);
+
+  // Phones default to the agenda; set after mount to avoid a hydration mismatch
+  useEffect(() => {
+    if (window.innerWidth < 1024) setView('agenda');
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/calendars/list')
+      .then((r) => r.json())
+      .then((data) => setCalendars(data.calendars || []))
+      .catch(() => {});
+    try {
+      const saved = localStorage.getItem(FILTER_STORAGE_KEY);
+      if (saved) setSelectedKeys(new Set(JSON.parse(saved)));
+    } catch {}
+  }, []);
+
+  function persistSelection(keys: Set<string> | null) {
+    setSelectedKeys(keys);
+    try {
+      if (keys === null) localStorage.removeItem(FILTER_STORAGE_KEY);
+      else localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify([...keys]));
+    } catch {}
+  }
+
+  function togglePerson(key: string) {
+    // From "everyone", tapping a person focuses on just them
+    const next = selectedKeys === null ? new Set([key]) : new Set(selectedKeys);
+    if (selectedKeys !== null) {
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+    }
+    // Selecting all people is the same as no filter
+    if (next.size === calendars.length) persistSelection(null);
+    else persistSelection(next);
+  }
+
   const [events, setEvents] = useState<NormalizedEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<NormalizedEvent | null>(null);
@@ -23,7 +74,26 @@ export function Calendar() {
   const year = current.getFullYear();
   const month = current.getMonth();
 
+  function eventVisible(e: NormalizedEvent): boolean {
+    if (selectedKeys === null) return true;
+    if (selectedKeys.size === 0) return false;
+    if (selectedKeys.has(e.accountEmail + '::' + e.calendarId)) return true;
+    const tags = e.tags || [];
+    if (tags.includes('family')) return true; // family-tagged events are for everyone
+    return tags.some((t) => selectedKeys.has(t));
+  }
+
+  const visibleEvents = selectedKeys === null ? events : events.filter(eventVisible);
+
   const getRange = useCallback((): [Date, Date] => {
+    if (view === 'agenda') {
+      const s = new Date();
+      s.setHours(0, 0, 0, 0);
+      const e = new Date(s);
+      e.setDate(s.getDate() + AGENDA_DAYS);
+      e.setHours(23, 59, 59, 999);
+      return [s, e];
+    }
     if (view === 'month') {
       return [new Date(year, month, 1), new Date(year, month + 1, 0, 23, 59, 59)];
     }
@@ -106,6 +176,7 @@ export function Calendar() {
   }
 
   function headerLabel(): string {
+    if (view === 'agenda') return 'Next ' + AGENDA_DAYS + ' days';
     if (view === 'month') return current.toLocaleString('default', { month: 'long', year: 'numeric' });
     if (view === 'week') {
       const [s, e] = getRange();
@@ -122,24 +193,77 @@ export function Calendar() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-2xl font-semibold text-text">{headerLabel()}</div>
-        <div className="flex items-center gap-2">
-          <button onClick={createOnViewedDay} className="px-3 py-2 rounded-lg bg-success-themed hover:brightness-110 text-white text-sm font-medium mr-2">+ New event</button>
-          <div className="flex rounded-lg overflow-hidden border border-border-themed mr-2">
-            <button onClick={() => setView('month')} className={'px-3 py-2 text-sm capitalize ' + (view === 'month' ? 'bg-accent text-white' : 'bg-surface hover:bg-surface-elevated text-text-muted')}>month</button>
-            <button onClick={() => setView('week')} className={'px-3 py-2 text-sm capitalize ' + (view === 'week' ? 'bg-accent text-white' : 'bg-surface hover:bg-surface-elevated text-text-muted')}>week</button>
-            <button onClick={() => setView('day')} className={'px-3 py-2 text-sm capitalize ' + (view === 'day' ? 'bg-accent text-white' : 'bg-surface hover:bg-surface-elevated text-text-muted')}>day</button>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div className="text-xl sm:text-2xl font-semibold text-text">{headerLabel()}</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={createOnViewedDay} className="px-3 py-2 min-h-[40px] rounded-lg bg-success-themed hover:brightness-110 text-white text-sm font-medium">+ New</button>
+          <div className="flex rounded-lg overflow-hidden border border-border-themed">
+            {(['agenda', 'day', 'week', 'month'] as ViewMode[]).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={'px-2.5 sm:px-3 py-2 min-h-[40px] text-sm capitalize ' + (view === v ? 'bg-accent text-white' : 'bg-surface hover:bg-surface-elevated text-text-muted')}
+              >
+                {v}
+              </button>
+            ))}
           </div>
-          <button onClick={goPrev} className="px-3 py-2 rounded-lg bg-surface hover:bg-surface-elevated text-text text-sm">Prev</button>
-          <button onClick={goToday} className="px-3 py-2 rounded-lg bg-surface hover:bg-surface-elevated text-text text-sm">Today</button>
-          <button onClick={goNext} className="px-3 py-2 rounded-lg bg-surface hover:bg-surface-elevated text-text text-sm">Next</button>
+          {view !== 'agenda' && (
+            <div className="flex gap-1">
+              <button onClick={goPrev} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface hover:bg-surface-elevated text-text text-sm">‹</button>
+              <button onClick={goToday} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface hover:bg-surface-elevated text-text text-sm">Today</button>
+              <button onClick={goNext} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface hover:bg-surface-elevated text-text text-sm">›</button>
+            </div>
+          )}
         </div>
       </div>
+
+      {calendars.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 mb-3">
+          <button
+            onClick={() => persistSelection(null)}
+            className={
+              'px-3 py-1.5 min-h-[36px] rounded-full text-sm font-medium border transition ' +
+              (selectedKeys === null
+                ? 'bg-accent text-white border-accent'
+                : 'bg-surface/80 text-text-muted border-border-themed hover:text-text')
+            }
+          >
+            Family
+          </button>
+          {calendars.map((c) => {
+            const key = c.accountEmail + '::' + c.calendarId;
+            const on = selectedKeys === null || selectedKeys.has(key);
+            return (
+              <button
+                key={key}
+                onClick={() => togglePerson(key)}
+                className={
+                  'inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-full text-sm font-medium border transition ' +
+                  (on && selectedKeys !== null
+                    ? 'text-white'
+                    : on
+                      ? 'bg-surface/80 text-text border-border-themed'
+                      : 'bg-surface/50 text-text-subtle border-border-themed hover:text-text-muted')
+                }
+                style={on && selectedKeys !== null ? { backgroundColor: c.color, borderColor: c.color } : undefined}
+              >
+                <span
+                  className={'w-2.5 h-2.5 rounded-full ' + (on ? '' : 'opacity-40')}
+                  style={{ backgroundColor: on && selectedKeys !== null ? 'rgba(255,255,255,0.9)' : c.color }}
+                />
+                {c.displayName}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className={loading ? 'opacity-50 transition-opacity' : 'transition-opacity'}>
-        {view === 'month' && <MonthView events={events} year={year} month={month} onEventClick={setSelectedEvent} onDayClick={goToDay} />}
-        {view === 'week' && <WeekView events={events} weekStart={weekStart} onEventClick={setSelectedEvent} onSlotClick={goToDay} />}
-        {view === 'day' && <DayView events={events} day={current} onEventClick={setSelectedEvent} onSlotClick={(d) => openCreateForm(d)} />}
+        {view === 'agenda' && <AgendaView events={visibleEvents} startDate={new Date()} days={AGENDA_DAYS} onEventClick={setSelectedEvent} />}
+        {view === 'month' && <MonthView events={visibleEvents} year={year} month={month} onEventClick={setSelectedEvent} onDayClick={goToDay} />}
+        {view === 'week' && <WeekView events={visibleEvents} weekStart={weekStart} onEventClick={setSelectedEvent} onSlotClick={goToDay} />}
+        {view === 'day' && <DayView events={visibleEvents} day={current} onEventClick={setSelectedEvent} onSlotClick={(d) => openCreateForm(d)} />}
       </div>
       <EventModal
         event={selectedEvent}

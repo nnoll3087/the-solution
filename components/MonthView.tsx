@@ -58,29 +58,35 @@ export function MonthView({ events, year, month, onEventClick, onDayClick }: Pro
             <div
               key={idx}
               onClick={day ? () => handleDayClick(day) : undefined}
-              className={'min-h-[120px] border-b border-r border-border-themed p-2 ' + (day ? 'bg-bg/60 cursor-pointer hover:bg-surface/70 transition' : 'bg-surface/30')}
+              className={'min-h-[72px] sm:min-h-[112px] border-b border-r border-border-themed p-1 sm:p-1.5 ' + (day ? 'bg-bg/60 cursor-pointer hover:bg-surface/70 transition' : 'bg-surface/30')}
             >
               {day && (
                 <>
-                  <div className={'text-sm font-medium mb-1 ' + (isToday ? 'text-accent' : 'text-text-muted')}>
+                  <div className={'text-sm font-medium mb-0.5 ' + (isToday ? 'text-accent' : 'text-text-muted')}>
                     {isToday ? (
                       <span className="inline-flex items-center justify-center w-6 h-6 bg-accent text-white rounded-full text-xs">{day}</span>
                     ) : (day)}
                   </div>
-                  <div className="space-y-1">
-                    {dayEvents.slice(0, 3).map((event) => (
+                  {/* Phones: color dots only; the agenda view is the readable list there */}
+                  <div className="flex flex-wrap gap-1 sm:hidden">
+                    {dayEvents.slice(0, 8).map((event, i) => (
+                      <span key={event.id + '-' + i} className="w-2 h-2 rounded-full" style={{ backgroundColor: event.color }} />
+                    ))}
+                  </div>
+                  <div className="hidden sm:block space-y-0.5">
+                    {dayEvents.slice(0, 5).map((event, i) => (
                       <button
-                        key={event.id}
+                        key={event.id + '-' + i}
                         onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(event); }}
-                        className="flex w-full items-center gap-1 text-left text-xs rounded px-1.5 py-0.5 hover:brightness-125 transition"
+                        className="flex w-full items-center gap-1 text-left text-xs rounded px-1 py-px hover:brightness-125 transition"
                         style={{ backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}
                       >
-                        <span className="truncate flex-1">{event.title}</span>
+                        <span className="truncate flex-1 leading-5">{event.title}</span>
                         <TagDots alsoFor={event.alsoFor} />
                       </button>
                     ))}
-                    {dayEvents.length > 3 && (
-                      <div className="text-xs text-text-subtle px-1.5">+{dayEvents.length - 3} more</div>
+                    {dayEvents.length > 5 && (
+                      <div className="text-xs text-text-subtle px-1">+{dayEvents.length - 5} more</div>
                     )}
                   </div>
                 </>

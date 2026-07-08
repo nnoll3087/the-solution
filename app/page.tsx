@@ -1,21 +1,21 @@
 import { Calendar } from '@/components/Calendar';
 import { QueuePreview } from '@/components/QueuePreview';
 import { ThemePrompt } from '@/components/ThemePrompt';
+import { ZenMode } from '@/components/ZenMode';
 
 export default function Home() {
   return (
-    <main className="min-h-screen p-8 relative">
-      <header className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-4xl font-bold text-text">The Solution®</h1>
-          <p className="text-text-muted mt-1">Noll & DeMichele family command center</p>
+    <ZenMode>
+      <main className="min-h-screen p-3 sm:p-5 relative">
+        <header className="mb-3 flex items-center justify-between gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-text">The Solution®</h1>
+          <ThemePrompt />
+        </header>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
+          <Calendar />
+          <QueuePreview />
         </div>
-        <ThemePrompt />
-      </header>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
-        <Calendar />
-        <QueuePreview />
-      </div>
-    </main>
+      </main>
+    </ZenMode>
   );
 }

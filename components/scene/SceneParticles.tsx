@@ -3,7 +3,8 @@
 import { useMemo } from 'react';
 
 type Particle = {
-  shape: 'circle' | 'bubble' | 'star' | 'sparkle' | 'leaf' | 'snowflake' | 'petal' | 'dot' | 'diamond';
+  shape: 'circle' | 'bubble' | 'star' | 'sparkle' | 'leaf' | 'snowflake' | 'petal' | 'dot' | 'diamond' | 'custom';
+  customPath?: string;
   count: number;
   sizeMin: number;
   sizeMax: number;
@@ -64,11 +65,24 @@ function makeInstances(system: Particle, seed: number): Instance[] {
   return arr;
 }
 
-function ParticleShape({ shape, size, color, glow }: { shape: Particle['shape']; size: number; color: string; glow: boolean }) {
+// Path data only: commands, numbers, separators. Anything else falls back to a circle.
+function isSafePath(d: string | undefined): d is string {
+  return !!d && d.length <= 2000 && /^[MmLlHhVvCcSsQqTtAaZz0-9\s,.\-eE]+$/.test(d);
+}
+
+function ParticleShape({ shape, customPath, size, color, glow }: { shape: Particle['shape']; customPath?: string; size: number; color: string; glow: boolean }) {
   const filter = glow ? 'drop-shadow(0 0 ' + size / 2 + 'px ' + color + ')' : 'none';
   const commonStyle: React.CSSProperties = { width: size, height: size, filter };
 
-  if (shape === 'circle' || shape === 'dot' || shape === 'bubble') {
+  if (shape === 'custom' && isSafePath(customPath)) {
+    return (
+      <svg viewBox="0 0 24 24" style={commonStyle}>
+        <path d={customPath} fill={color} />
+      </svg>
+    );
+  }
+
+  if (shape === 'circle' || shape === 'dot' || shape === 'bubble' || shape === 'custom') {
     return (
       <div style={{
         ...commonStyle,
@@ -197,7 +211,7 @@ export function SceneParticles({ particles }: Props) {
 
             return (
               <div key={p.id} style={style}>
-                <ParticleShape shape={system.shape} size={p.size} color={p.color} glow={system.glow} />
+                <ParticleShape shape={system.shape} customPath={system.customPath} size={p.size} color={p.color} glow={system.glow} />
               </div>
             );
           })

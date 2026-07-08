@@ -40,6 +40,9 @@ export function QueueView() {
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
+    // Deep link from QueuePreview: /queue?person=Edie
+    const person = new URLSearchParams(window.location.search).get('person');
+    if (person) setActivePerson(person);
     load();
     loadPrefs();
     const interval = setInterval(load, 60000);

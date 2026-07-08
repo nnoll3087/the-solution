@@ -108,7 +108,8 @@ export function WeekView({ events, weekStart, onEventClick, onSlotClick }: Props
   }
 
   return (
-    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-hidden">
+    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-x-auto">
+      <div className="min-w-[640px]">
       <div className="grid grid-cols-8 border-b border-border-themed">
         <div className="px-2 py-2 text-xs text-text-subtle"></div>
         {days.map((d, i) => {
@@ -175,6 +176,7 @@ export function WeekView({ events, weekStart, onEventClick, onSlotClick }: Props
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );

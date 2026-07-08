@@ -10,8 +10,8 @@ type Props = {
   onSlotClick?: (date: Date) => void;
 };
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const HOUR_PX = 40;
 
 type PositionedEvent = {
   event: NormalizedEvent;
@@ -21,7 +21,7 @@ type PositionedEvent = {
   widthPct: number;
 };
 
-function layoutTimedEvents(events: NormalizedEvent[]): PositionedEvent[] {
+function layoutTimedEvents(events: NormalizedEvent[], rangeStart: number): PositionedEvent[] {
   const timed = events.filter((e) => !e.allDay).map((e) => ({
     event: e,
     start: new Date(e.start).getTime(),
@@ -60,8 +60,8 @@ function layoutTimedEvents(events: NormalizedEvent[]): PositionedEvent[] {
       const evEnd = new Date(item.event.end);
       const startHours = evStart.getHours() + evStart.getMinutes() / 60;
       const endHours = evEnd.getHours() + evEnd.getMinutes() / 60;
-      const top = startHours * 64;
-      const height = Math.max((endHours - startHours) * 64, 24);
+      const top = (startHours - rangeStart) * HOUR_PX;
+      const height = Math.max((endHours - startHours) * HOUR_PX, 22);
       const widthPct = 100 / maxCol;
       const leftPct = item.column * widthPct;
       positioned.push({ event: item.event, top, height, leftPct, widthPct });
@@ -101,7 +101,19 @@ export function DayView({ events, day, onEventClick, onSlotClick }: Props) {
 
   const dayEvents = eventsForDay();
   const allDayEvents = dayEvents.filter((e) => e.allDay);
-  const positioned = layoutTimedEvents(dayEvents);
+
+  // Show 8am-9pm by default, stretching to cover any events outside that window
+  let rangeStart = 8;
+  let rangeEnd = 21;
+  for (const e of dayEvents) {
+    if (e.allDay) continue;
+    const s = new Date(e.start);
+    const en = new Date(e.end);
+    rangeStart = Math.min(rangeStart, s.getHours());
+    rangeEnd = Math.max(rangeEnd, en.getHours() + (en.getMinutes() > 0 ? 1 : 0));
+  }
+  const hours = Array.from({ length: rangeEnd - rangeStart }, (_, i) => rangeStart + i);
+  const positioned = layoutTimedEvents(dayEvents, rangeStart);
 
   return (
     <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-hidden">
@@ -124,18 +136,18 @@ export function DayView({ events, day, onEventClick, onSlotClick }: Props) {
           ))}
         </div>
       )}
-      <div className="grid grid-cols-[80px_1fr] max-h-[70vh] overflow-y-auto">
+      <div className="grid grid-cols-[64px_1fr] sm:grid-cols-[80px_1fr]">
         <div>
-          {HOURS.map((h) => (
-            <div key={h} className="h-16 border-b border-border-themed px-2 py-1 text-xs text-text-subtle text-right">{formatHour(h)}</div>
+          {hours.map((h) => (
+            <div key={h} className="h-10 border-b border-border-themed px-2 py-0.5 text-xs text-text-subtle text-right">{formatHour(h)}</div>
           ))}
         </div>
         <div className="relative border-l border-border-themed">
-          {HOURS.map((h) => (
+          {hours.map((h) => (
             <div
               key={h}
               onClick={() => handleSlotClick(h)}
-              className="h-16 border-b border-border-themed cursor-pointer hover:bg-surface-elevated/40 transition"
+              className="h-10 border-b border-border-themed cursor-pointer hover:bg-surface-elevated/40 transition"
             />
           ))}
           {positioned.map((p, i) => (

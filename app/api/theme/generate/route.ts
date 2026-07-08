@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { saveTheme } from '@/lib/theme';
+import { recordGeneration } from '@/lib/usage';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -35,7 +36,8 @@ The spec has these fields:
     "animationDuration": seconds (20-90 recommended)
   },
   "particles": array of particle systems, each with:
-    "shape": one of "circle" "bubble" "star" "sparkle" "leaf" "snowflake" "petal" "dot" "diamond",
+    "shape": one of "circle" "bubble" "star" "sparkle" "leaf" "snowflake" "petal" "dot" "diamond" "custom",
+    "customPath": only when shape is "custom" — an SVG path in a 24x24 viewBox drawing a simple filled silhouette that matches the theme (a spider for Spider-Man, a rocket for space, a T-rex for dinosaurs). Path commands and numbers only, one closed shape, under 500 characters. The silhouette must read clearly at 10-30px,
     "count": 5-60,
     "sizeMin": 2-8,
     "sizeMax": 8-40,
@@ -72,6 +74,7 @@ DESIGN GUIDELINES:
 - Rainbow: colorful sparkles (twinkle) + arc gradient with 5+ color stops + high vibrancy
 - All text colors MUST have strong contrast against background
 - Always include at least 1 particle system unless truly minimalist
+- When the prompt names a character, creature, or object with a recognizable silhouette, use a "custom" particle for it (spiders, dinosaurs, rockets, hearts, fish, lightning bolts). Mix it with a simpler second system (sparkles, dots) for depth
 - Prefer animated gradients for immersive themes
 - Be bold and distinct. No timid themes.
 - All colors are full 6-digit hex codes with # prefix`;
@@ -91,6 +94,8 @@ export async function POST(request: NextRequest) {
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: 'Theme prompt: ' + prompt.trim() }],
     });
+
+    await recordGeneration(message.usage.input_tokens, message.usage.output_tokens);
 
     const textBlock = message.content.find((b) => b.type === 'text');
     if (!textBlock || textBlock.type !== 'text') {

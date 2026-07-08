@@ -21,12 +21,6 @@ export function QueuePreview() {
   const [entries, setEntries] = useState<QueueEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    load();
-    const interval = setInterval(load, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
   function load() {
     fetch('/api/queue')
       .then((r) => r.json())
@@ -34,6 +28,13 @@ export function QueuePreview() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }
+
+  useEffect(() => {
+    load();
+    const interval = setInterval(load, 60000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const active = entries.filter((e) => !e.dismissedAt);
   const byPerson: Record<string, QueueEntry[]> = {};
@@ -77,9 +78,14 @@ export function QueuePreview() {
             if (changes) parts.push(changes + ' changed');
             if (deletes) parts.push(deletes + ' removed');
             return (
-              <li key={person} className="flex items-center justify-between bg-bg/60 rounded-md px-3 py-2 border border-border-themed">
-                <span className="text-sm font-medium text-text">{person}</span>
-                <span className="text-xs text-text-muted">{parts.join(', ')}</span>
+              <li key={person}>
+                <a
+                  href={'/queue?person=' + encodeURIComponent(person)}
+                  className="flex items-center justify-between bg-bg/60 rounded-md px-3 py-2.5 min-h-[44px] border border-border-themed hover:bg-surface-elevated/60 transition"
+                >
+                  <span className="text-sm font-medium text-text">{person}</span>
+                  <span className="text-xs text-text-muted">{parts.join(', ')}</span>
+                </a>
               </li>
             );
           })}

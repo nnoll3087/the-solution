@@ -31,7 +31,8 @@ export type SolidBackground = {
 export type Background = GradientBackground | SolidBackground;
 
 export type Particle = {
-  shape: 'circle' | 'bubble' | 'star' | 'sparkle' | 'leaf' | 'snowflake' | 'petal' | 'dot' | 'diamond';
+  shape: 'circle' | 'bubble' | 'star' | 'sparkle' | 'leaf' | 'snowflake' | 'petal' | 'dot' | 'diamond' | 'custom';
+  customPath?: string; // SVG path in a 24x24 viewBox, used when shape is 'custom'
   count: number;
   sizeMin: number;
   sizeMax: number;
