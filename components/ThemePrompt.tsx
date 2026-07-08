@@ -1,21 +1,52 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTheme } from './ThemeProvider';
+
+type Usage = {
+  remainingUsd: number | null;
+  totalSpentUsd: number;
+  generationCount: number;
+};
 
 export function ThemePrompt() {
   const { theme, generate, reset, generating, error } = useTheme();
   const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState('');
+  const [usage, setUsage] = useState<Usage | null>(null);
+  const [editingBalance, setEditingBalance] = useState(false);
+  const [balanceInput, setBalanceInput] = useState('');
+
+  function loadUsage() {
+    fetch('/api/usage').then((r) => r.json()).then(setUsage).catch(() => {});
+  }
+
+  useEffect(() => {
+    if (open) loadUsage();
+  }, [open]);
 
   async function handleSubmit() {
     if (!prompt.trim() || generating) return;
     await generate(prompt.trim());
     setPrompt('');
+    loadUsage();
   }
 
   async function handleReset() {
     await reset();
+  }
+
+  async function saveBalance() {
+    const v = parseFloat(balanceInput);
+    if (isNaN(v) || v < 0) return;
+    await fetch('/api/usage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ balanceUsd: v }),
+    });
+    setEditingBalance(false);
+    setBalanceInput('');
+    loadUsage();
   }
 
   return (
@@ -65,7 +96,47 @@ export function ThemePrompt() {
               ))}
             </div>
 
-            <div className="mt-4 pt-3 border-t border-border-themed flex gap-2">
+            <div className="mt-4 pt-3 border-t border-border-themed text-xs text-text-muted">
+              {usage && (
+                <div className="flex items-center justify-between gap-2">
+                  <span>
+                    {usage.remainingUsd !== null
+                      ? '≈ $' + usage.remainingUsd.toFixed(2) + ' credits left'
+                      : 'API credits: not set'}
+                    {usage.generationCount > 0 && (
+                      <span className="text-text-subtle"> · {usage.generationCount} themes, ${usage.totalSpentUsd.toFixed(2)}</span>
+                    )}
+                  </span>
+                  {!editingBalance ? (
+                    <button onClick={() => setEditingBalance(true)} className="text-accent hover:brightness-125 flex-shrink-0">
+                      {usage.remainingUsd !== null ? 'Re-sync' : 'Set'}
+                    </button>
+                  ) : (
+                    <span className="flex items-center gap-1 flex-shrink-0">
+                      $
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={balanceInput}
+                        onChange={(e) => setBalanceInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') saveBalance(); }}
+                        placeholder="20.00"
+                        autoFocus
+                        className="w-16 bg-bg border border-border-themed rounded px-1.5 py-0.5 text-text"
+                      />
+                      <button onClick={saveBalance} className="text-accent hover:brightness-125">Save</button>
+                    </span>
+                  )}
+                </div>
+              )}
+              <p className="text-text-subtle mt-1">
+                Anthropic doesn&apos;t expose balances, so enter yours from console.anthropic.com and
+                theme costs count down from it. Tracks this app only.
+              </p>
+            </div>
+
+            <div className="mt-3 pt-3 border-t border-border-themed flex gap-2">
               <button
                 onClick={handleReset}
                 disabled={generating}

@@ -15,6 +15,7 @@ const FILES = {
   'queue-prefs': '.queue-prefs.json',
   theme: '.theme.json',
   'event-tags': '.event-tags.json',
+  usage: '.usage.json',
 };
 
 if (!process.env.POSTGRES_URL) {

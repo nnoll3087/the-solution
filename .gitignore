@@ -46,3 +46,4 @@ next-env.d.ts
 .queue-prefs.json
 .theme.json
 .event-tags.json
+.usage.json
