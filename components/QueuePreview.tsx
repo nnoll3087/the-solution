@@ -14,6 +14,7 @@ type QueueEntry = {
   end: string;
   detectedAt: string;
   dismissedAt?: string;
+  alsoFor?: string[];
 };
 
 export function QueuePreview() {
@@ -30,14 +31,19 @@ export function QueuePreview() {
     fetch('/api/queue')
       .then((r) => r.json())
       .then((data) => setEntries(data.entries || []))
+      .catch(() => {})
       .finally(() => setLoading(false));
   }
 
   const active = entries.filter((e) => !e.dismissedAt);
   const byPerson: Record<string, QueueEntry[]> = {};
   active.forEach((e) => {
-    if (!byPerson[e.displayName]) byPerson[e.displayName] = [];
-    byPerson[e.displayName].push(e);
+    // Tagged people see the entry under their name too
+    const names = [e.displayName, ...(e.alsoFor || [])];
+    new Set(names).forEach((n) => {
+      if (!byPerson[n]) byPerson[n] = [];
+      byPerson[n].push(e);
+    });
   });
 
   const people = Object.keys(byPerson).sort();

@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing token data' }, { status: 500 });
     }
 
-    saveToken({
+    await saveToken({
       accountEmail: userInfo.email,
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,

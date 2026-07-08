@@ -87,7 +87,7 @@ export function CalendarSelector({
     <div className="space-y-6">
       {Object.entries(byAccount).map(([email, cals]) => (
         <div key={email}>
-          <h3 className="text-sm font-medium text-slate-400 mb-2 uppercase tracking-wide">
+          <h3 className="text-sm font-medium text-text-muted mb-2 uppercase tracking-wide">
             {email}
           </h3>
           <ul className="space-y-2">
@@ -98,19 +98,19 @@ export function CalendarSelector({
               const currentColor = config?.color || cal.backgroundColor || '#666';
               const pickerOpen = openPicker === key;
               return (
-                <li key={cal.calendarId} className="bg-slate-950 rounded-md border border-slate-800">
+                <li key={cal.calendarId} className="bg-bg rounded-md border border-border-themed">
                   <div className="flex items-center gap-3 text-sm px-3 py-2">
                     <input
                       type="checkbox"
                       checked={enabled}
                       onChange={(e) => save(cal, { enabled: e.target.checked })}
                       disabled={saving === key}
-                      className="w-4 h-4 accent-blue-500"
+                      className="w-4 h-4 accent-[var(--theme-accent)]"
                     />
                     <button
                       onClick={() => enabled && setOpenPicker(pickerOpen ? null : key)}
                       disabled={!enabled}
-                      className="w-4 h-4 rounded-full flex-shrink-0 ring-offset-2 ring-offset-slate-950 disabled:cursor-default enabled:hover:ring-2 enabled:hover:ring-slate-400 transition"
+                      className="w-4 h-4 rounded-full flex-shrink-0 ring-offset-2 ring-offset-[var(--theme-background)] disabled:cursor-default enabled:hover:ring-2 enabled:hover:ring-text-subtle transition"
                       style={{ backgroundColor: currentColor }}
                       title={enabled ? 'Change color' : ''}
                     />
@@ -119,38 +119,38 @@ export function CalendarSelector({
                         type="text"
                         defaultValue={config?.displayName}
                         onBlur={(e) => save(cal, { displayName: e.target.value })}
-                        className="bg-slate-900 text-slate-100 border border-slate-700 rounded px-2 py-1 text-sm flex-1"
+                        className="bg-surface text-text border border-border-themed rounded px-2 py-1 text-sm flex-1"
                       />
                     ) : (
-                      <span className="text-slate-400 flex-1 truncate">{cal.summary}</span>
+                      <span className="text-text-muted flex-1 truncate">{cal.summary}</span>
                     )}
                     {cal.primary && (
-                      <span className="text-xs bg-blue-950 text-blue-300 px-2 py-0.5 rounded">
+                      <span className="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded">
                         primary
                       </span>
                     )}
                   </div>
                   {pickerOpen && enabled && (
-                    <div className="border-t border-slate-800 p-3 space-y-2">
+                    <div className="border-t border-border-themed p-3 space-y-2">
                       <div className="grid grid-cols-6 gap-2">
                         {PRESET_COLORS.map((c) => (
                           <button
                             key={c}
                             onClick={() => save(cal, { color: c })}
-                            className={'w-8 h-8 rounded-full transition ' + (currentColor === c ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-950' : 'hover:scale-110')}
+                            className={'w-8 h-8 rounded-full transition ' + (currentColor === c ? 'ring-2 ring-white ring-offset-2 ring-offset-[var(--theme-background)]' : 'hover:scale-110')}
                             style={{ backgroundColor: c }}
                           />
                         ))}
                       </div>
-                      <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
-                        <label className="text-xs text-slate-400">Custom:</label>
+                      <div className="flex items-center gap-2 pt-2 border-t border-border-themed">
+                        <label className="text-xs text-text-muted">Custom:</label>
                         <input
                           type="color"
                           value={currentColor}
                           onChange={(e) => save(cal, { color: e.target.value })}
-                          className="w-8 h-8 bg-slate-950 rounded cursor-pointer border border-slate-800"
+                          className="w-8 h-8 bg-bg rounded cursor-pointer border border-border-themed"
                         />
-                        <span className="text-xs text-slate-500 font-mono">{currentColor}</span>
+                        <span className="text-xs text-text-subtle font-mono">{currentColor}</span>
                       </div>
                     </div>
                   )}

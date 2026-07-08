@@ -36,8 +36,8 @@ function eventsEqual(a: EventSnapshot | NormalizedEvent, b: EventSnapshot | Norm
   return differences;
 }
 
-export function detectChanges(currentEvents: NormalizedEvent[]): EventChange[] {
-  const snapshot = getSnapshot();
+export async function detectChanges(currentEvents: NormalizedEvent[]): Promise<EventChange[]> {
+  const snapshot = await getSnapshot();
 
   // First run — no snapshot yet, no changes
   if (snapshot.lastRun === null) {

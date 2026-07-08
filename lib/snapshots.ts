@@ -1,8 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import { readStore, writeStore } from './storage';
 import { NormalizedEvent } from './events';
-
-const SNAPSHOT_FILE = path.join(process.cwd(), '.snapshots.json');
 
 export type EventSnapshot = {
   id: string;
@@ -23,16 +20,11 @@ export type SnapshotData = {
 
 const EMPTY: SnapshotData = { lastRun: null, events: [] };
 
-export function getSnapshot(): SnapshotData {
-  if (!fs.existsSync(SNAPSHOT_FILE)) return EMPTY;
-  try {
-    return JSON.parse(fs.readFileSync(SNAPSHOT_FILE, 'utf8'));
-  } catch {
-    return EMPTY;
-  }
+export async function getSnapshot(): Promise<SnapshotData> {
+  return readStore('snapshots', EMPTY);
 }
 
-export function saveSnapshot(events: NormalizedEvent[]) {
+export async function saveSnapshot(events: NormalizedEvent[]) {
   const data: SnapshotData = {
     lastRun: new Date().toISOString(),
     events: events.map((e) => ({
@@ -47,5 +39,5 @@ export function saveSnapshot(events: NormalizedEvent[]) {
       description: e.description,
     })),
   };
-  fs.writeFileSync(SNAPSHOT_FILE, JSON.stringify(data, null, 2));
+  await writeStore('snapshots', data);
 }

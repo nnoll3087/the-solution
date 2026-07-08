@@ -29,8 +29,8 @@ type EventDeletePayload = {
   eventId: string;
 };
 
-function getCalendarClient(accountEmail: string) {
-  const token = getToken(accountEmail);
+async function getCalendarClient(accountEmail: string) {
+  const token = await getToken(accountEmail);
   if (!token) return null;
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
@@ -52,7 +52,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  const calendar = getCalendarClient(accountEmail);
+  const calendar = await getCalendarClient(accountEmail);
   if (!calendar) {
     return NextResponse.json({ error: 'No token for account' }, { status: 401 });
   }
@@ -127,7 +127,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  const calendar = getCalendarClient(accountEmail);
+  const calendar = await getCalendarClient(accountEmail);
   if (!calendar) {
     return NextResponse.json({ error: 'No token for account' }, { status: 401 });
   }

@@ -1,9 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import { readStore, writeStore } from './storage';
 import { EventChange } from './diff';
-
-const QUEUE_FILE = path.join(process.cwd(), '.queue.json');
-const PREFS_FILE = path.join(process.cwd(), '.queue-prefs.json');
 
 export type QueueEntry = EventChange & {
   id: string;
@@ -41,21 +37,16 @@ function calendarKey(entry: { accountEmail: string; calendarId: string }) {
 
 // -------- Queue --------
 
-export function getQueue(): QueueData {
-  if (!fs.existsSync(QUEUE_FILE)) return EMPTY_QUEUE;
-  try {
-    return JSON.parse(fs.readFileSync(QUEUE_FILE, 'utf8'));
-  } catch {
-    return EMPTY_QUEUE;
-  }
+export async function getQueue(): Promise<QueueData> {
+  return readStore('queue', EMPTY_QUEUE);
 }
 
-export function saveQueue(data: QueueData) {
-  fs.writeFileSync(QUEUE_FILE, JSON.stringify(data, null, 2));
+export async function saveQueue(data: QueueData) {
+  await writeStore('queue', data);
 }
 
-export function addChangesToQueue(changes: EventChange[]) {
-  const queue = getQueue();
+export async function addChangesToQueue(changes: EventChange[]) {
+  const queue = await getQueue();
   const existingKeys = new Set(
     queue.entries.map((e) => e.type + ':' + e.eventId + ':' + (e.changedFields || []).join(','))
   );
@@ -74,22 +65,22 @@ export function addChangesToQueue(changes: EventChange[]) {
     entries: [...queue.entries, ...newEntries],
   };
 
-  saveQueue(updated);
+  await saveQueue(updated);
   return newEntries.length;
 }
 
-export function dismissEntry(entryId: string) {
-  const queue = getQueue();
+export async function dismissEntry(entryId: string) {
+  const queue = await getQueue();
   const updated: QueueData = {
     entries: queue.entries.map((e) =>
       e.id === entryId ? { ...e, dismissedAt: new Date().toISOString() } : e
     ),
   };
-  saveQueue(updated);
+  await saveQueue(updated);
 }
 
-export function dismissAllForCalendar(accountEmail: string, calendarId: string) {
-  const queue = getQueue();
+export async function dismissAllForCalendar(accountEmail: string, calendarId: string) {
+  const queue = await getQueue();
   const now = new Date().toISOString();
   const updated: QueueData = {
     entries: queue.entries.map((e) =>
@@ -98,12 +89,12 @@ export function dismissAllForCalendar(accountEmail: string, calendarId: string) 
         : e
     ),
   };
-  saveQueue(updated);
+  await saveQueue(updated);
 }
 
-export function pruneExpired() {
-  const prefs = getPreferences();
-  const queue = getQueue();
+export async function pruneExpired() {
+  const prefs = await getPreferences();
+  const queue = await getQueue();
   const now = Date.now();
 
   const kept = queue.entries.filter((entry) => {
@@ -120,29 +111,24 @@ export function pruneExpired() {
   });
 
   if (kept.length !== queue.entries.length) {
-    saveQueue({ entries: kept });
+    await saveQueue({ entries: kept });
   }
 }
 
 // -------- Preferences --------
 
-export function getPreferences(): PreferencesData {
-  if (!fs.existsSync(PREFS_FILE)) return DEFAULT_PREFS;
-  try {
-    const parsed = JSON.parse(fs.readFileSync(PREFS_FILE, 'utf8'));
-    return { ...DEFAULT_PREFS, ...parsed };
-  } catch {
-    return DEFAULT_PREFS;
-  }
+export async function getPreferences(): Promise<PreferencesData> {
+  const parsed = await readStore<Partial<PreferencesData>>('queue-prefs', {});
+  return { ...DEFAULT_PREFS, ...parsed };
 }
 
-export function savePreferences(prefs: PreferencesData) {
-  fs.writeFileSync(PREFS_FILE, JSON.stringify(prefs, null, 2));
+export async function savePreferences(prefs: PreferencesData) {
+  await writeStore('queue-prefs', prefs);
 }
 
-export function setPersonPreference(pref: PersonPreferences) {
-  const prefs = getPreferences();
+export async function setPersonPreference(pref: PersonPreferences) {
+  const prefs = await getPreferences();
   const filtered = prefs.perPerson.filter((p) => p.calendarKey !== pref.calendarKey);
   filtered.push(pref);
-  savePreferences({ ...prefs, perPerson: filtered });
+  await savePreferences({ ...prefs, perPerson: filtered });
 }

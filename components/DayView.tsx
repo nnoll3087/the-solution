@@ -1,6 +1,7 @@
 'use client';
 
 import { NormalizedEvent } from '@/lib/events';
+import { TagDots } from './TagDots';
 
 type Props = {
   events: NormalizedEvent[];
@@ -114,10 +115,11 @@ export function DayView({ events, day, onEventClick, onSlotClick }: Props) {
             <button
               key={'day-allday-' + i + '-' + event.id}
               onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(event); }}
-              className="block w-full text-left rounded px-2 py-1 text-sm hover:brightness-125 transition"
+              className="flex w-full items-center gap-1.5 text-left rounded px-2 py-1 text-sm hover:brightness-125 transition"
               style={{ backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}
             >
-              {event.title}
+              <span className="truncate flex-1">{event.title}</span>
+              <TagDots alsoFor={event.alsoFor} />
             </button>
           ))}
         </div>
@@ -151,7 +153,10 @@ export function DayView({ events, day, onEventClick, onSlotClick }: Props) {
                 borderLeft: '3px solid ' + p.event.color,
               }}
             >
-              <div className="font-medium truncate">{p.event.title}</div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium truncate flex-1">{p.event.title}</span>
+                <TagDots alsoFor={p.event.alsoFor} />
+              </div>
             </button>
           ))}
         </div>

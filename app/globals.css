@@ -11,6 +11,7 @@
   --theme-accent: #3b82f6;
   --theme-accent-hover: #60a5fa;
   --theme-success: #10b981;
+  --theme-warning: #f59e0b;
   --theme-danger: #ef4444;
 }
 
@@ -25,6 +26,7 @@
   --color-accent: var(--theme-accent);
   --color-accent-hover: var(--theme-accent-hover);
   --color-success-themed: var(--theme-success);
+  --color-warning-themed: var(--theme-warning);
   --color-danger-themed: var(--theme-danger);
 }
 

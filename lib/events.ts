@@ -1,6 +1,9 @@
 import { google } from 'googleapis';
 import { getToken } from './tokens';
 import { getEnabledCalendars, CalendarConfig } from './config';
+import { getAllTags, resolveTags, seriesId } from './tags';
+
+export type TaggedPerson = { displayName: string; color: string };
 
 export type NormalizedEvent = {
   id: string;
@@ -14,6 +17,8 @@ export type NormalizedEvent = {
   start: string;
   end: string;
   allDay: boolean;
+  tags?: string[];        // raw Solution-only tags (calendarKeys or 'family')
+  alsoFor?: TaggedPerson[]; // tags resolved to people, home calendar excluded
 };
 
 function getAuthClient(accessToken: string, refreshToken: string) {
@@ -27,7 +32,7 @@ function getAuthClient(accessToken: string, refreshToken: string) {
 }
 
 async function fetchEventsForCalendar(cal: CalendarConfig, timeMin: string, timeMax: string): Promise<NormalizedEvent[]> {
-  const token = getToken(cal.accountEmail);
+  const token = await getToken(cal.accountEmail);
   if (!token) return [];
   const auth = getAuthClient(token.accessToken, token.refreshToken);
   const calendar = google.calendar({ version: 'v3', auth });
@@ -64,7 +69,7 @@ async function fetchEventsForCalendar(cal: CalendarConfig, timeMin: string, time
 }
 
 export async function fetchAllEvents(timeMin: Date, timeMax: Date): Promise<NormalizedEvent[]> {
-  const enabled = getEnabledCalendars();
+  const enabled = await getEnabledCalendars();
   const results = await Promise.all(
     enabled.map((cal) => fetchEventsForCalendar(cal, timeMin.toISOString(), timeMax.toISOString()))
   );
@@ -77,5 +82,17 @@ export async function fetchAllEvents(timeMin: Date, timeMax: Date): Promise<Norm
     seen.add(key);
     deduped.push(event);
   }
+
+  const tagsMap = await getAllTags();
+  const byKey = new Map(enabled.map((c) => [c.accountEmail + '::' + c.calendarId, c]));
+  for (const event of deduped) {
+    const tags = tagsMap[seriesId(event.id)];
+    if (!tags || tags.length === 0) continue;
+    event.tags = tags;
+    event.alsoFor = resolveTags(tags, event.accountEmail + '::' + event.calendarId, byKey).map(
+      (c) => ({ displayName: c.displayName, color: c.color })
+    );
+  }
+
   return deduped;
 }

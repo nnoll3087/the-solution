@@ -18,6 +18,7 @@ type QueueEntry = {
   dismissedAt?: string;
   changedFields?: string[];
   previous?: { title?: string; start?: string; end?: string; location?: string };
+  alsoFor?: string[];
 };
 
 type ClearMode = 'never' | 'hours' | 'days';
@@ -46,11 +47,11 @@ export function QueueView() {
   }, []);
 
   function load() {
-    fetch('/api/queue').then((r) => r.json()).then((data) => setEntries(data.entries || []));
+    fetch('/api/queue').then((r) => r.json()).then((data) => setEntries(data.entries || [])).catch(() => {});
   }
 
   function loadPrefs() {
-    fetch('/api/queue/preferences').then((r) => r.json()).then(setPrefs);
+    fetch('/api/queue/preferences').then((r) => r.json()).then(setPrefs).catch(() => {});
   }
 
   async function dismiss(entryId: string) {
@@ -63,7 +64,9 @@ export function QueueView() {
   }
 
   async function dismissAllForPerson(person: string) {
-    const items = entries.filter((e) => e.displayName === person && !e.dismissedAt);
+    const items = entries.filter(
+      (e) => (e.displayName === person || (e.alsoFor || []).includes(person)) && !e.dismissedAt
+    );
     for (const item of items) {
       await fetch('/api/queue', {
         method: 'POST',
@@ -77,8 +80,12 @@ export function QueueView() {
   const active = entries.filter((e) => !e.dismissedAt);
   const byPerson: Record<string, QueueEntry[]> = {};
   active.forEach((e) => {
-    if (!byPerson[e.displayName]) byPerson[e.displayName] = [];
-    byPerson[e.displayName].push(e);
+    // Tagged people see the entry in their filter too
+    const names = [e.displayName, ...(e.alsoFor || [])];
+    new Set(names).forEach((n) => {
+      if (!byPerson[n]) byPerson[n] = [];
+      byPerson[n].push(e);
+    });
   });
   const people = Object.keys(byPerson).sort();
   const filtered = activePerson === 'all' ? active : (byPerson[activePerson] || []);
@@ -89,7 +96,7 @@ export function QueueView() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setActivePerson('all')}
-            className={'px-3 py-1.5 rounded-lg text-sm ' + (activePerson === 'all' ? 'bg-blue-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-300')}
+            className={'px-3 py-1.5 rounded-lg text-sm ' + (activePerson === 'all' ? 'bg-accent text-white' : 'bg-surface hover:bg-surface-elevated text-text-muted')}
           >
             All ({active.length})
           </button>
@@ -97,7 +104,7 @@ export function QueueView() {
             <button
               key={p}
               onClick={() => setActivePerson(p)}
-              className={'px-3 py-1.5 rounded-lg text-sm ' + (activePerson === p ? 'bg-blue-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-300')}
+              className={'px-3 py-1.5 rounded-lg text-sm ' + (activePerson === p ? 'bg-accent text-white' : 'bg-surface hover:bg-surface-elevated text-text-muted')}
             >
               {p} ({byPerson[p].length})
             </button>
@@ -105,7 +112,7 @@ export function QueueView() {
         </div>
         <button
           onClick={() => setShowSettings(!showSettings)}
-          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm"
+          className="px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-elevated text-text-muted text-sm"
         >
           {showSettings ? 'Close settings' : 'Settings'}
         </button>
@@ -119,7 +126,7 @@ export function QueueView() {
         <div className="flex justify-end">
           <button
             onClick={() => dismissAllForPerson(activePerson)}
-            className="text-xs text-slate-400 hover:text-slate-200"
+            className="text-xs text-text-muted hover:text-text"
           >
             Dismiss all for {activePerson}
           </button>
@@ -127,30 +134,32 @@ export function QueueView() {
       )}
 
       {filtered.length === 0 ? (
-        <div className="bg-slate-900 rounded-lg border border-slate-800 p-8 text-center">
-          <p className="text-slate-400">All caught up.</p>
+        <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed p-8 text-center">
+          <p className="text-text-muted">All caught up.</p>
         </div>
       ) : (
         <ul className="space-y-2">
           {filtered.map((entry) => (
-            <li key={entry.id} className="bg-slate-900 border border-slate-800 rounded-lg p-4">
+            <li key={entry.id} className="bg-surface border border-border-themed rounded-lg p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className={'text-xs uppercase tracking-wide font-semibold ' + typeColor(entry.type)}>
                       {entry.type}
                     </span>
-                    <span className="text-xs text-slate-500">for {entry.displayName}</span>
+                    <span className="text-xs text-text-subtle">
+                      for {[entry.displayName, ...(entry.alsoFor || [])].join(' + ')}
+                    </span>
                   </div>
-                  <div className="text-slate-100 font-medium">{entry.title}</div>
-                  <div className="text-sm text-slate-400 mt-1">{formatWhen(entry)}</div>
+                  <div className="text-text font-medium">{entry.title}</div>
+                  <div className="text-sm text-text-muted mt-1">{formatWhen(entry)}</div>
                   {entry.type === 'changed' && entry.previous && entry.changedFields && (
                     <ChangedDetails entry={entry} />
                   )}
                 </div>
                 <button
                   onClick={() => dismiss(entry.id)}
-                  className="text-xs text-slate-500 hover:text-slate-200 flex-shrink-0"
+                  className="text-xs text-text-subtle hover:text-text flex-shrink-0"
                 >
                   Dismiss
                 </button>
@@ -164,9 +173,9 @@ export function QueueView() {
 }
 
 function typeColor(t: ChangeType): string {
-  if (t === 'new') return 'text-emerald-400';
-  if (t === 'changed') return 'text-amber-400';
-  return 'text-rose-400';
+  if (t === 'new') return 'text-success-themed';
+  if (t === 'changed') return 'text-warning-themed';
+  return 'text-danger-themed';
 }
 
 function formatWhen(entry: QueueEntry): string {
@@ -183,7 +192,7 @@ function formatWhen(entry: QueueEntry): string {
 function ChangedDetails({ entry }: { entry: QueueEntry }) {
   if (!entry.changedFields || !entry.previous) return null;
   return (
-    <div className="mt-2 text-xs text-slate-500 space-y-0.5">
+    <div className="mt-2 text-xs text-text-subtle space-y-0.5">
       {entry.changedFields.map((field) => {
         const prev = (entry.previous as Record<string, string | undefined>)[field];
         const curr = (entry as unknown as Record<string, string | undefined>)[field];
@@ -250,16 +259,16 @@ function QueueSettings({
   }
 
   return (
-    <div className="bg-slate-900 rounded-lg border border-slate-800 p-4 space-y-4">
-      <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Auto-clear settings</h3>
+    <div className="bg-surface rounded-lg border border-border-themed p-4 space-y-4">
+      <h3 className="text-sm font-semibold text-text uppercase tracking-wide">Auto-clear settings</h3>
 
       <div>
-        <div className="text-sm text-slate-400 mb-2">Default (applies to everyone unless overridden)</div>
+        <div className="text-sm text-text-muted mb-2">Default (applies to everyone unless overridden)</div>
         <div className="flex items-center gap-2">
           <select
             value={defaultMode}
             onChange={(e) => { const m = e.target.value as ClearMode; setDefaultMode(m); saveDefaults(m, defaultHours); }}
-            className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-sm text-slate-200"
+            className="bg-bg border border-border-themed rounded px-2 py-1 text-sm text-text"
           >
             <option value="never">Never auto-clear</option>
             <option value="hours">After hours</option>
@@ -277,9 +286,9 @@ function QueueSettings({
                   setDefaultHours(hours);
                   saveDefaults(defaultMode, hours);
                 }}
-                className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-sm text-slate-200 w-16"
+                className="bg-bg border border-border-themed rounded px-2 py-1 text-sm text-text w-16"
               />
-              <span className="text-sm text-slate-400">{defaultMode}</span>
+              <span className="text-sm text-text-muted">{defaultMode}</span>
             </>
           )}
         </div>
@@ -287,7 +296,7 @@ function QueueSettings({
 
       {people.length > 0 && (
         <div>
-          <div className="text-sm text-slate-400 mb-2">Per person overrides</div>
+          <div className="text-sm text-text-muted mb-2">Per person overrides</div>
           <div className="space-y-2">
             {people.map((person) => {
 const pref = getPersonPref(person);
@@ -295,14 +304,14 @@ const mode: ClearMode = pref?.clearMode ?? defaultMode;
 const hours = pref?.clearAfterHours ?? defaultHours;
               return (
                 <div key={person} className="flex items-center gap-2 text-sm">
-                  <span className="text-slate-200 w-24">{person}</span>
+                  <span className="text-text w-24">{person}</span>
                   <select
                     value={mode}
                     onChange={(e) => {
                       const m = e.target.value as ClearMode;
                       savePerson(person, m, hours);
                     }}
-                    className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-sm text-slate-200"
+                    className="bg-bg border border-border-themed rounded px-2 py-1 text-sm text-text"
                   >
                     <option value="never">Never</option>
                     <option value="hours">After hours</option>
@@ -319,9 +328,9 @@ const hours = pref?.clearAfterHours ?? defaultHours;
                           const newHours = mode === 'days' ? v * 24 : v;
                           savePerson(person, mode, newHours);
                         }}
-                        className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-sm text-slate-200 w-16"
+                        className="bg-bg border border-border-themed rounded px-2 py-1 text-sm text-text w-16"
                       />
-                      <span className="text-slate-400">{mode}</span>
+                      <span className="text-text-muted">{mode}</span>
                     </>
                   )}
                 </div>

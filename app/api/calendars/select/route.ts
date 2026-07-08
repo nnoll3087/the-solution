@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   const { accountEmail, calendarId, displayName, color, enabled } = body;
 
   if (enabled) {
-    upsertCalendarConfig({
+    await upsertCalendarConfig({
       accountEmail,
       calendarId,
       displayName: displayName || 'Untitled',
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       enabled: true,
     });
   } else {
-    removeCalendarConfig(accountEmail, calendarId);
+    await removeCalendarConfig(accountEmail, calendarId);
   }
 
   return NextResponse.json({ success: true });

@@ -1,6 +1,7 @@
 'use client';
 
 import { NormalizedEvent } from '@/lib/events';
+import { TagDots } from './TagDots';
 
 type Props = {
   events: NormalizedEvent[];
@@ -143,17 +144,18 @@ export function WeekView({ events, weekStart, onEventClick, onSlotClick }: Props
                 <button
                   key={di + '-allday-' + i + '-' + event.id}
                   onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(event); }}
-                  className="absolute left-1 right-1 rounded px-1.5 py-0.5 text-xs truncate text-left hover:brightness-125 transition"
+                  className="absolute left-1 right-1 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-left hover:brightness-125 transition"
                   style={{ top: i * 20 + 'px', backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}
                 >
-                  {event.title}
+                  <span className="truncate flex-1">{event.title}</span>
+                  <TagDots alsoFor={event.alsoFor} />
                 </button>
               ))}
               {positioned.map((p, i) => (
                 <button
                   key={di + '-timed-' + i + '-' + p.event.id}
                   onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(p.event); }}
-                  className="absolute rounded px-1 py-0.5 text-xs truncate text-left hover:brightness-125 transition"
+                  className="absolute rounded px-1 py-0.5 text-xs text-left hover:brightness-125 transition overflow-hidden"
                   style={{
                     top: p.top + 'px',
                     height: p.height + 'px',
@@ -164,7 +166,10 @@ export function WeekView({ events, weekStart, onEventClick, onSlotClick }: Props
                     borderLeft: '3px solid ' + p.event.color,
                   }}
                 >
-                  {p.event.title}
+                  <span className="flex items-center gap-1">
+                    <span className="truncate flex-1">{p.event.title}</span>
+                    <TagDots alsoFor={p.event.alsoFor} />
+                  </span>
                 </button>
               ))}
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { NormalizedEvent } from '@/lib/events';
+import { TagDots } from './TagDots';
 
 type Props = {
   events: NormalizedEvent[];
@@ -71,10 +72,11 @@ export function MonthView({ events, year, month, onEventClick, onDayClick }: Pro
                       <button
                         key={event.id}
                         onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(event); }}
-                        className="block w-full text-left text-xs truncate rounded px-1.5 py-0.5 hover:brightness-125 transition"
+                        className="flex w-full items-center gap-1 text-left text-xs rounded px-1.5 py-0.5 hover:brightness-125 transition"
                         style={{ backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}
                       >
-                        {event.title}
+                        <span className="truncate flex-1">{event.title}</span>
+                        <TagDots alsoFor={event.alsoFor} />
                       </button>
                     ))}
                     {dayEvents.length > 3 && (

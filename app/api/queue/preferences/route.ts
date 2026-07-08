@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPreferences, savePreferences, setPersonPreference } from '@/lib/queue';
 
 export async function GET() {
-  return NextResponse.json(getPreferences());
+  return NextResponse.json(await getPreferences());
 }
 
 export async function POST(request: NextRequest) {
@@ -11,13 +11,13 @@ export async function POST(request: NextRequest) {
 
   if (action === 'set_person') {
     const { calendarKey, clearMode, clearAfterHours } = body;
-    setPersonPreference({ calendarKey, clearMode, clearAfterHours });
+    await setPersonPreference({ calendarKey, clearMode, clearAfterHours });
     return NextResponse.json({ success: true });
   }
 
   if (action === 'set_defaults') {
-    const prefs = getPreferences();
-    savePreferences({
+    const prefs = await getPreferences();
+    await savePreferences({
       ...prefs,
       defaultClearMode: body.defaultClearMode ?? prefs.defaultClearMode,
       defaultClearAfterHours: body.defaultClearAfterHours ?? prefs.defaultClearAfterHours,

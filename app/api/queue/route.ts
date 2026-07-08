@@ -9,6 +9,8 @@ import {
   dismissAllForCalendar,
   pruneExpired,
 } from '@/lib/queue';
+import { getAllTags, resolveTags, seriesId } from '@/lib/tags';
+import { getEnabledCalendars } from '@/lib/config';
 
 const LOOKAHEAD_DAYS = 90;
 
@@ -18,14 +20,24 @@ export async function GET() {
   const timeMax = new Date(now.getTime() + LOOKAHEAD_DAYS * 24 * 60 * 60 * 1000);
 
   const events = await fetchAllEvents(timeMin, timeMax);
-  const changes = detectChanges(events);
-  const added = addChangesToQueue(changes);
-  saveSnapshot(events);
-  pruneExpired();
+  const changes = await detectChanges(events);
+  const added = await addChangesToQueue(changes);
+  await saveSnapshot(events);
+  await pruneExpired();
 
-  const queue = getQueue();
+  const queue = await getQueue();
+
+  // Resolve Solution-only tags at read time so late tagging still reaches everyone's queue
+  const tagsMap = await getAllTags();
+  const byKey = new Map((await getEnabledCalendars()).map((c) => [c.accountEmail + '::' + c.calendarId, c]));
+  const entries = queue.entries.map((e) => {
+    const alsoFor = resolveTags(tagsMap[seriesId(e.eventId)], e.accountEmail + '::' + e.calendarId, byKey)
+      .map((c) => c.displayName);
+    return alsoFor.length > 0 ? { ...e, alsoFor } : e;
+  });
+
   return NextResponse.json({
-    entries: queue.entries,
+    entries,
     detectedChanges: added,
     lastRun: new Date().toISOString(),
   });
@@ -36,12 +48,12 @@ export async function POST(request: NextRequest) {
   const { action, entryId, accountEmail, calendarId } = body;
 
   if (action === 'dismiss' && entryId) {
-    dismissEntry(entryId);
+    await dismissEntry(entryId);
     return NextResponse.json({ success: true });
   }
 
   if (action === 'dismiss_all_for_calendar' && accountEmail && calendarId) {
-    dismissAllForCalendar(accountEmail, calendarId);
+    await dismissAllForCalendar(accountEmail, calendarId);
     return NextResponse.json({ success: true });
   }
 

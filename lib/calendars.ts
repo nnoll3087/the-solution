@@ -26,7 +26,7 @@ function getAuthClient(accessToken: string, refreshToken: string) {
 }
 
 export async function listCalendarsForAccount(accountEmail: string): Promise<CalendarInfo[]> {
-  const token = getToken(accountEmail);
+  const token = await getToken(accountEmail);
   if (!token) return [];
 
   const auth = getAuthClient(token.accessToken, token.refreshToken);
@@ -53,7 +53,7 @@ export async function listCalendarsForAccount(accountEmail: string): Promise<Cal
 }
 
 export async function listAllCalendars(): Promise<CalendarInfo[]> {
-  const tokens = getAllTokens();
+  const tokens = await getAllTokens();
   const results = await Promise.all(
     tokens.map((t) => listCalendarsForAccount(t.accountEmail))
   );

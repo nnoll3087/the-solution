@@ -60,6 +60,12 @@ function toTimeInput(d: Date): string {
   return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 }
 
+// Date-string math ('YYYY-MM-DD') so all-day dates never pass through Date's UTC parsing
+function addDaysToDateStr(dateStr: string, n: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return toDateInput(new Date(y, m - 1, d + n));
+}
+
 export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCalendarKey, existingEvent }: Props) {
   const isEdit = !!existingEvent;
 
@@ -79,6 +85,7 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
   const [attendees, setAttendees] = useState('');
   const [recurrence, setRecurrence] = useState('none');
   const [reminders, setReminders] = useState<Reminder[]>([{ method: 'popup', minutes: 10 }]);
+  const [tags, setTags] = useState<string[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -92,17 +99,26 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
     setError(null);
 
     if (existingEvent) {
-      const s = new Date(existingEvent.start);
-      const e = new Date(existingEvent.end);
       setTitle(existingEvent.title);
       setDescription(existingEvent.description || '');
       setLocation(existingEvent.location || '');
       setAllDay(existingEvent.allDay);
-      setStartDate(toDateInput(s));
-      setStartTime(toTimeInput(s));
-      setEndDate(toDateInput(e));
-      setEndTime(toTimeInput(e));
+      if (existingEvent.allDay) {
+        // Google stores all-day as bare dates with an exclusive end; show the inclusive last day
+        setStartDate(existingEvent.start.slice(0, 10));
+        setEndDate(addDaysToDateStr(existingEvent.end.slice(0, 10), -1));
+        setStartTime('09:00');
+        setEndTime('10:00');
+      } else {
+        const s = new Date(existingEvent.start);
+        const e = new Date(existingEvent.end);
+        setStartDate(toDateInput(s));
+        setStartTime(toTimeInput(s));
+        setEndDate(toDateInput(e));
+        setEndTime(toTimeInput(e));
+      }
       setCalendarKey(existingEvent.accountEmail + '::' + existingEvent.calendarId);
+      setTags(existingEvent.tags || []);
     } else {
       const startBase = initialStart || nextRoundedHour();
       const endBase = new Date(startBase.getTime() + 60 * 60 * 1000);
@@ -117,6 +133,7 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
       setAttendees('');
       setRecurrence('none');
       setReminders([{ method: 'popup', minutes: 10 }]);
+      setTags([]);
       if (initialCalendarKey) setCalendarKey(initialCalendarKey);
     }
   }, [open, initialStart, initialCalendarKey, existingEvent]);
@@ -142,19 +159,28 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
 
     const [accountEmail, calendarId] = calendarKey.split('::');
 
-    const start = allDay
-      ? new Date(startDate + 'T00:00:00').toISOString()
-      : new Date(startDate + 'T' + startTime).toISOString();
-    const end = allDay
-      ? new Date(endDate + 'T00:00:00').toISOString()
-      : new Date(endDate + 'T' + endTime).toISOString();
-
-    if (new Date(end).getTime() <= new Date(start).getTime()) {
-      setError('End time must be after start time');
-      return;
+    let start: string;
+    let end: string;
+    if (allDay) {
+      if (endDate < startDate) {
+        setError('End date must be on or after start date');
+        return;
+      }
+      // Send bare dates; Google's all-day end date is exclusive, so add a day
+      start = startDate;
+      end = addDaysToDateStr(endDate, 1);
+    } else {
+      start = new Date(startDate + 'T' + startTime).toISOString();
+      end = new Date(endDate + 'T' + endTime).toISOString();
+      if (new Date(end).getTime() <= new Date(start).getTime()) {
+        setError('End time must be after start time');
+        return;
+      }
     }
 
     const attendeeEmails = attendees.split(/[\s,;]+/).filter(Boolean);
+    // The home calendar can't tag itself (relevant if it changed after chips were picked)
+    const cleanTags = tags.filter((t) => t !== calendarKey);
 
     setSaving(true);
     try {
@@ -179,6 +205,7 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to update event');
+        await saveTags(existingEvent.id, cleanTags);
       } else {
         const res = await fetch('/api/events/create', {
           method: 'POST',
@@ -199,6 +226,7 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to create event');
+        if (data.event?.id) await saveTags(data.event.id, cleanTags);
       }
       onClose();
       onSaved?.();
@@ -207,6 +235,18 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
     } finally {
       setSaving(false);
     }
+  }
+
+  async function saveTags(eventId: string, t: string[]) {
+    await fetch('/api/tags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventId, tags: t }),
+    });
+  }
+
+  function toggleTag(key: string) {
+    setTags((prev) => (prev.includes(key) ? prev.filter((t) => t !== key) : [...prev, key]));
   }
 
   function addReminder() {
@@ -254,6 +294,45 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
             {isEdit && (
               <p className="text-xs text-text-subtle mt-1">Calendar can&apos;t be changed on existing events.</p>
             )}
+          </div>
+
+          <div>
+            <label className={labelCls}>Also for</label>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => toggleTag('family')}
+                className={
+                  'px-2.5 py-1 rounded-full text-xs font-medium border transition ' +
+                  (tags.includes('family')
+                    ? 'bg-accent text-white border-accent'
+                    : 'bg-bg text-text-muted border-border-themed hover:text-text')
+                }
+              >
+                Family
+              </button>
+              {calendars
+                .filter((c) => c.accountEmail + '::' + c.calendarId !== calendarKey)
+                .map((c) => {
+                  const key = c.accountEmail + '::' + c.calendarId;
+                  const selected = tags.includes(key);
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => toggleTag(key)}
+                      className={
+                        'px-2.5 py-1 rounded-full text-xs font-medium border transition ' +
+                        (selected ? 'text-white' : 'bg-bg text-text-muted border-border-themed hover:text-text')
+                      }
+                      style={selected ? { backgroundColor: c.color, borderColor: c.color } : undefined}
+                    >
+                      {c.displayName}
+                    </button>
+                  );
+                })}
+            </div>
+            <p className="text-xs text-text-subtle mt-1">Solution-only. Shows in their queue and as dots on the event. Not sent to Google.</p>
           </div>
 
           <div>

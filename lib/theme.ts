@@ -1,7 +1,4 @@
-import fs from 'fs';
-import path from 'path';
-
-const THEME_FILE = path.join(process.cwd(), '.theme.json');
+import { readStore, writeStore, deleteStore } from './storage';
 
 export type Colors = {
   background: string;
@@ -14,6 +11,7 @@ export type Colors = {
   accent: string;
   accentHover: string;
   success: string;
+  warning: string;
   danger: string;
 };
 
@@ -89,6 +87,7 @@ export const DEFAULT_THEME: Theme = {
     accent: '#3b82f6',
     accentHover: '#60a5fa',
     success: '#10b981',
+    warning: '#f59e0b',
     danger: '#ef4444',
   },
   background: { type: 'solid', color: '#020617' },
@@ -97,21 +96,18 @@ export const DEFAULT_THEME: Theme = {
   decorations: [],
 };
 
-export function getTheme(): Theme {
-  if (!fs.existsSync(THEME_FILE)) return DEFAULT_THEME;
-  try {
-    const parsed = JSON.parse(fs.readFileSync(THEME_FILE, 'utf8'));
-    if (!parsed.colors) return DEFAULT_THEME;
-    return parsed;
-  } catch {
-    return DEFAULT_THEME;
-  }
+export async function getTheme(): Promise<Theme> {
+  const parsed = await readStore<Theme | null>('theme', null);
+  if (!parsed || !parsed.colors) return DEFAULT_THEME;
+  // Themes saved before the warning color existed
+  if (!parsed.colors.warning) parsed.colors.warning = DEFAULT_THEME.colors.warning;
+  return parsed;
 }
 
-export function saveTheme(theme: Theme) {
-  fs.writeFileSync(THEME_FILE, JSON.stringify(theme, null, 2));
+export async function saveTheme(theme: Theme) {
+  await writeStore('theme', theme);
 }
 
-export function clearTheme() {
-  if (fs.existsSync(THEME_FILE)) fs.unlinkSync(THEME_FILE);
+export async function clearTheme() {
+  await deleteStore('theme');
 }

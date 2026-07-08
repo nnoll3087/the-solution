@@ -13,6 +13,7 @@ type Colors = {
     accent: string;
     accentHover: string;
     success: string;
+    warning: string;
     danger: string;
   };
   
@@ -40,6 +41,7 @@ type Colors = {
       accent: '#3b82f6',
       accentHover: '#60a5fa',
       success: '#10b981',
+      warning: '#f59e0b',
       danger: '#ef4444',
     },
     background: { type: 'solid', color: '#020617' },
@@ -71,6 +73,8 @@ function applyToDocument(theme: Theme) {
     root.style.setProperty('--theme-accent', theme.colors.accent);
     root.style.setProperty('--theme-accent-hover', theme.colors.accentHover);
     root.style.setProperty('--theme-success', theme.colors.success);
+    // Fallback covers API responses from themes saved before warning existed
+    root.style.setProperty('--theme-warning', theme.colors.warning || '#f59e0b');
     root.style.setProperty('--theme-danger', theme.colors.danger);
     root.setAttribute('data-theme-mode', theme.mode);
   }

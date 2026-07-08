@@ -24,6 +24,7 @@ The spec has these fields:
     "accent": "#hex",
     "accentHover": "#hex",
     "success": "#hex",
+    "warning": "#hex, amber/caution tone that fits the theme, readable against surface",
     "danger": "#hex"
   },
   "background": {
@@ -110,12 +111,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'AI theme missing required fields', theme }, { status: 500 });
     }
 
+    if (!theme.colors.warning) theme.colors.warning = '#f59e0b';
     if (!theme.particles) theme.particles = [];
     if (!theme.overlays) theme.overlays = [];
     if (!theme.decorations) theme.decorations = [];
     if (!theme.background) theme.background = { type: 'solid', color: theme.colors.background };
 
-    saveTheme(theme);
+    await saveTheme(theme);
     return NextResponse.json({ theme });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';

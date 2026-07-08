@@ -45,3 +45,4 @@ next-env.d.ts
 .queue.json
 .queue-prefs.json
 .theme.json
+.event-tags.json

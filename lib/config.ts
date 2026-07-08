@@ -1,7 +1,4 @@
-import fs from 'fs';
-import path from 'path';
-
-const CONFIG_FILE = path.join(process.cwd(), '.config.json');
+import { readStore, writeStore } from './storage';
 
 export type CalendarConfig = { accountEmail: string; calendarId: string; displayName: string; color: string; enabled: boolean; };
 
@@ -9,27 +6,27 @@ export type AppConfig = { calendars: CalendarConfig[]; };
 
 const DEFAULT_CONFIG: AppConfig = { calendars: [] };
 
-export function getConfig(): AppConfig {
-  try { return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')); } catch { return DEFAULT_CONFIG; }
+export async function getConfig(): Promise<AppConfig> {
+  return readStore('config', DEFAULT_CONFIG);
 }
 
-export function saveConfig(config: AppConfig) {
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+export async function saveConfig(config: AppConfig) {
+  await writeStore('config', config);
 }
 
-export function upsertCalendarConfig(cal: CalendarConfig) {
-  const config = getConfig();
+export async function upsertCalendarConfig(cal: CalendarConfig) {
+  const config = await getConfig();
   const filtered = config.calendars.filter((c) => !(c.accountEmail === cal.accountEmail && c.calendarId === cal.calendarId));
   filtered.push(cal);
-  saveConfig({ ...config, calendars: filtered });
+  await saveConfig({ ...config, calendars: filtered });
 }
 
-export function removeCalendarConfig(accountEmail: string, calendarId: string) {
-  const config = getConfig();
+export async function removeCalendarConfig(accountEmail: string, calendarId: string) {
+  const config = await getConfig();
   const filtered = config.calendars.filter((c) => !(c.accountEmail === accountEmail && c.calendarId === calendarId));
-  saveConfig({ ...config, calendars: filtered });
+  await saveConfig({ ...config, calendars: filtered });
 }
 
-export function getEnabledCalendars(): CalendarConfig[] {
-  return getConfig().calendars.filter((c) => c.enabled);
+export async function getEnabledCalendars(): Promise<CalendarConfig[]> {
+  return (await getConfig()).calendars.filter((c) => c.enabled);
 }

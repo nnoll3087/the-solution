@@ -1,8 +1,6 @@
-import fs from 'fs';
-import path from 'path';
 import crypto from 'crypto';
+import { readStore, writeStore } from './storage';
 
-const TOKEN_FILE = path.join(process.cwd(), '.tokens.json');
 const KEY = process.env.TOKEN_ENCRYPTION_KEY || '';
 
 type StoredToken = {
@@ -32,12 +30,10 @@ function decrypt(payload: string): string {
   return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
 }
 
-function readAll(): StoredToken[] {
-  if (!fs.existsSync(TOKEN_FILE)) return [];
+async function readAll(): Promise<StoredToken[]> {
   try {
-    const raw = fs.readFileSync(TOKEN_FILE, 'utf8');
-    const encrypted = JSON.parse(raw);
-    return encrypted.map((t: StoredToken) => ({
+    const encrypted = await readStore<StoredToken[]>('tokens', []);
+    return encrypted.map((t) => ({
       ...t,
       accessToken: decrypt(t.accessToken),
       refreshToken: decrypt(t.refreshToken),
@@ -47,26 +43,26 @@ function readAll(): StoredToken[] {
   }
 }
 
-function writeAll(tokens: StoredToken[]) {
+async function writeAll(tokens: StoredToken[]) {
   const encrypted = tokens.map(t => ({
     ...t,
     accessToken: encrypt(t.accessToken),
     refreshToken: encrypt(t.refreshToken),
   }));
-  fs.writeFileSync(TOKEN_FILE, JSON.stringify(encrypted, null, 2));
+  await writeStore('tokens', encrypted);
 }
 
-export function saveToken(token: StoredToken) {
-  const tokens = readAll();
+export async function saveToken(token: StoredToken) {
+  const tokens = await readAll();
   const filtered = tokens.filter(t => t.accountEmail !== token.accountEmail);
   filtered.push(token);
-  writeAll(filtered);
+  await writeAll(filtered);
 }
 
-export function getToken(accountEmail: string): StoredToken | null {
-  return readAll().find(t => t.accountEmail === accountEmail) || null;
+export async function getToken(accountEmail: string): Promise<StoredToken | null> {
+  return (await readAll()).find(t => t.accountEmail === accountEmail) || null;
 }
 
-export function getAllTokens(): StoredToken[] {
+export async function getAllTokens(): Promise<StoredToken[]> {
   return readAll();
 }

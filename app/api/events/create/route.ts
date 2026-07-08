@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  const token = getToken(accountEmail);
+  const token = await getToken(accountEmail);
   if (!token) {
     return NextResponse.json({ error: 'No token for account' }, { status: 401 });
   }

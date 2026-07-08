@@ -99,6 +99,19 @@ export function EventModal({ event, onClose, onEdit, onDeleted }: Props) {
               <span className="text-text">{event.location}</span>
             </div>
           )}
+          {event.alsoFor && event.alsoFor.length > 0 && (
+            <div className="flex items-start gap-2">
+              <span className="text-text-subtle w-16 flex-shrink-0">Also for</span>
+              <span className="flex items-center gap-3 flex-wrap">
+                {event.alsoFor.map((p) => (
+                  <span key={p.displayName} className="inline-flex items-center gap-1.5 text-text">
+                    <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: p.color }} />
+                    {p.displayName}
+                  </span>
+                ))}
+              </span>
+            </div>
+          )}
           {event.description && (
             <div className="flex items-start gap-2">
               <span className="text-text-subtle w-16 flex-shrink-0">Notes</span>
