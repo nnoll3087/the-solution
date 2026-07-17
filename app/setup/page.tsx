@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { getAllTokens } from '@/lib/tokens';
 import { listAllCalendars } from '@/lib/calendars';
 import { getConfig } from '@/lib/config';
@@ -13,6 +14,12 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
   return (
     <main className="min-h-screen bg-bg text-text p-8">
       <div className="max-w-4xl mx-auto">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 mb-4 px-3 py-2 rounded-lg bg-surface hover:bg-surface-elevated border border-border-themed text-text text-sm font-medium transition"
+        >
+          ← Back to calendar
+        </Link>
         <h1 className="text-4xl font-bold mb-2">Setup</h1>
         <p className="text-text-muted mb-8">Choose which calendars to display and give them names.</p>
         {params.connected && (
