@@ -6,6 +6,7 @@ import { TagDots } from './TagDots';
 
 type Props = {
   events: NormalizedEvent[];
+  custodyEvents?: NormalizedEvent[];
   weekStart: Date;
   onEventClick?: (event: NormalizedEvent) => void;
   onSlotClick?: (date: Date) => void;
@@ -72,7 +73,12 @@ function layoutTimedEvents(events: NormalizedEvent[]): PositionedEvent[] {
   return positioned;
 }
 
-export function WeekView({ events, weekStart, onEventClick, onSlotClick }: Props) {
+export function WeekView({ events, custodyEvents = [], weekStart, onEventClick, onSlotClick }: Props) {
+  function custodyForDay(day: Date) {
+    const dayStart = new Date(day).setHours(0, 0, 0, 0);
+    const dayEnd = new Date(day).setHours(23, 59, 59, 999);
+    return custodyEvents.find((e) => eventOnDay(e, dayStart, dayEnd))?.custody;
+  }
   const today = new Date();
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStart);
@@ -111,8 +117,14 @@ export function WeekView({ events, weekStart, onEventClick, onSlotClick }: Props
         <div className="px-2 py-2 text-xs text-text-subtle"></div>
         {days.map((d, i) => {
           const isToday = isSameDay(d, today);
+          const custody = custodyForDay(d);
           return (
-            <div key={i} className="px-2 py-2 text-center border-l border-border-themed">
+            <div
+              key={i}
+              className="px-2 py-2 text-center border-l border-border-themed"
+              style={custody ? { backgroundColor: custody.color + '2e' } : undefined}
+              title={custody?.label}
+            >
               <div className="text-xs text-text-muted uppercase tracking-wide">{DAY_LABELS[d.getDay()]}</div>
               <div className={'text-lg font-semibold ' + (isToday ? 'text-accent' : 'text-text')}>{d.getDate()}</div>
             </div>
@@ -129,8 +141,13 @@ export function WeekView({ events, weekStart, onEventClick, onSlotClick }: Props
           const dayEvents = eventsForDay(day);
           const allDay = dayEvents.filter((e) => e.allDay);
           const positioned = layoutTimedEvents(dayEvents);
+          const custody = custodyForDay(day);
           return (
-            <div key={di} className="relative border-l border-border-themed">
+            <div
+              key={di}
+              className="relative border-l border-border-themed"
+              style={custody ? { backgroundColor: custody.color + '14' } : undefined}
+            >
               {HOURS.map((h) => (
                 <div
                   key={h}

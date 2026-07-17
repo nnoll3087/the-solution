@@ -6,6 +6,7 @@ import { TagDots } from './TagDots';
 
 type Props = {
   events: NormalizedEvent[];
+  custodyEvents?: NormalizedEvent[];
   startDate: Date;
   days: number;
   onEventClick?: (event: NormalizedEvent) => void;
@@ -22,10 +23,10 @@ function fmtTime(iso: string): string {
   return new Date(iso).toLocaleString('default', { hour: 'numeric', minute: '2-digit' });
 }
 
-export function AgendaView({ events, startDate, days, onEventClick }: Props) {
+export function AgendaView({ events, custodyEvents = [], startDate, days, onEventClick }: Props) {
   const today = new Date();
 
-  const dayList: { date: Date; events: NormalizedEvent[] }[] = [];
+  const dayList: { date: Date; events: NormalizedEvent[]; custody?: { color: string; label: string } }[] = [];
   for (let i = 0; i < days; i++) {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
@@ -37,7 +38,8 @@ export function AgendaView({ events, startDate, days, onEventClick }: Props) {
         if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
         return new Date(a.start).getTime() - new Date(b.start).getTime();
       });
-    dayList.push({ date, events: dayEvents });
+    const custody = custodyEvents.find((e) => eventOnDay(e, dayStart, dayEnd))?.custody;
+    dayList.push({ date, events: dayEvents, custody });
   }
 
   // Always show today; skip other empty days so the list stays glanceable
@@ -45,17 +47,26 @@ export function AgendaView({ events, startDate, days, onEventClick }: Props) {
 
   return (
     <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-hidden divide-y divide-[var(--theme-border)]">
-      {visible.map(({ date, events: dayEvents }) => {
+      {visible.map(({ date, events: dayEvents, custody }) => {
         const isToday = date.toDateString() === today.toDateString();
         return (
           <div key={date.toISOString()} className="px-4 py-3">
-            <div className="flex items-baseline gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span className={'text-sm font-bold uppercase tracking-wide ' + (isToday ? 'text-accent' : 'text-text')}>
                 {dayLabel(new Date(date), today)}
               </span>
               <span className="text-sm text-text-muted">
                 {date.toLocaleString('default', { month: 'short', day: 'numeric' })}
               </span>
+              {custody && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full"
+                  style={{ backgroundColor: custody.color + '2e', color: custody.color }}
+                >
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: custody.color }} />
+                  {custody.label}
+                </span>
+              )}
             </div>
             {dayEvents.length === 0 ? (
               <p className="text-sm text-text-subtle py-1">Nothing scheduled</p>

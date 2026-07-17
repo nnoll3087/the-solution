@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { getToken } from './tokens';
 import { getAuthClient, isAuthError } from './google';
-import { getEnabledCalendars, CalendarConfig } from './config';
+import { getEnabledCalendars, getCustodyConfig, CalendarConfig } from './config';
 import { getAllTags, resolveTags, seriesId } from './tags';
 
 export type TaggedPerson = { displayName: string; color: string };
@@ -21,6 +21,7 @@ export type NormalizedEvent = {
   organizerSelf?: boolean; // true when this calendar is the event's organizer
   tags?: string[];        // raw Solution-only tags (calendarKeys or 'family')
   alsoFor?: TaggedPerson[]; // tags resolved to people, home calendar excluded
+  custody?: { color: string; label: string }; // matched a custody rule: hide from lists, tint the day
 };
 
 // Accounts whose Google connection is broken (revoked/expired token). The UI uses
@@ -101,6 +102,19 @@ export async function fetchAllEvents(timeMin: Date, timeMax: Date): Promise<Even
     event.alsoFor = resolveTags(tags, event.accountEmail + '::' + event.calendarId, byKey).map(
       (c) => ({ displayName: c.displayName, color: c.color })
     );
+  }
+
+  // Custody coloring: only all-day events on the configured calendar can match,
+  // so a timed "Call Cori" on someone's calendar is never swallowed
+  const custody = await getCustodyConfig();
+  if (custody && custody.rules.length > 0) {
+    for (const event of deduped) {
+      if (!event.allDay) continue;
+      if (event.accountEmail + '::' + event.calendarId !== custody.calendarKey) continue;
+      const title = event.title.toLowerCase();
+      const rule = custody.rules.find((r) => r.match && title.includes(r.match.toLowerCase()));
+      if (rule) event.custody = { color: rule.color, label: rule.label || rule.match };
+    }
   }
 
   return { events: deduped, authErrors, fetchFailed };

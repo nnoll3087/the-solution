@@ -6,6 +6,7 @@ import { TagDots } from './TagDots';
 
 type Props = {
   events: NormalizedEvent[];
+  custodyEvents?: NormalizedEvent[];
   year: number;
   month: number;
   onEventClick?: (event: NormalizedEvent) => void;
@@ -14,7 +15,7 @@ type Props = {
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export function MonthView({ events, year, month, onEventClick, onDayClick }: Props) {
+export function MonthView({ events, custodyEvents = [], year, month, onEventClick, onDayClick }: Props) {
   const firstOfMonth = new Date(year, month, 1);
   const startDayOfWeek = firstOfMonth.getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -31,6 +32,12 @@ export function MonthView({ events, year, month, onEventClick, onDayClick }: Pro
     const dayStart = new Date(year, month, day).setHours(0, 0, 0, 0);
     const dayEnd = new Date(year, month, day).setHours(23, 59, 59, 999);
     return events.filter((e) => eventOnDay(e, dayStart, dayEnd));
+  }
+
+  function custodyForDay(day: number) {
+    const dayStart = new Date(year, month, day).setHours(0, 0, 0, 0);
+    const dayEnd = new Date(year, month, day).setHours(23, 59, 59, 999);
+    return custodyEvents.find((e) => eventOnDay(e, dayStart, dayEnd))?.custody;
   }
 
   function handleDayClick(day: number) {
@@ -51,11 +58,14 @@ export function MonthView({ events, year, month, onEventClick, onDayClick }: Pro
         {cells.map((day, idx) => {
           const isToday = isCurrentMonth && day === todayDate;
           const dayEvents = day ? eventsForDay(day) : [];
+          const custody = day ? custodyForDay(day) : undefined;
           return (
             <div
               key={idx}
               onClick={day ? () => handleDayClick(day) : undefined}
-              className={'min-h-[72px] sm:min-h-[112px] border-b border-r border-border-themed p-1 sm:p-1.5 ' + (day ? 'bg-bg/60 cursor-pointer hover:bg-surface/70 transition' : 'bg-surface/30')}
+              className={'min-h-[72px] sm:min-h-[112px] border-b border-r border-border-themed p-1 sm:p-1.5 ' + (day ? 'cursor-pointer hover:brightness-110 transition ' + (custody ? '' : 'bg-bg/60') : 'bg-surface/30')}
+              style={custody ? { backgroundColor: custody.color + '2e' } : undefined}
+              title={custody?.label}
             >
               {day && (
                 <>

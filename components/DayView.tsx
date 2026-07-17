@@ -6,6 +6,7 @@ import { TagDots } from './TagDots';
 
 type Props = {
   events: NormalizedEvent[];
+  custodyEvents?: NormalizedEvent[];
   day: Date;
   onEventClick?: (event: NormalizedEvent) => void;
   onSlotClick?: (date: Date) => void;
@@ -72,7 +73,7 @@ function layoutTimedEvents(events: NormalizedEvent[], rangeStart: number): Posit
   return positioned;
 }
 
-export function DayView({ events, day, onEventClick, onSlotClick }: Props) {
+export function DayView({ events, custodyEvents = [], day, onEventClick, onSlotClick }: Props) {
   const today = new Date();
   const isToday = today.toDateString() === day.toDateString();
 
@@ -98,6 +99,9 @@ export function DayView({ events, day, onEventClick, onSlotClick }: Props) {
 
   const dayEvents = eventsForDay();
   const allDayEvents = dayEvents.filter((e) => e.allDay);
+  const dayStartMs = new Date(day).setHours(0, 0, 0, 0);
+  const dayEndMs = new Date(day).setHours(23, 59, 59, 999);
+  const custody = custodyEvents.find((e) => eventOnDay(e, dayStartMs, dayEndMs))?.custody;
 
   // Show 8am-9pm by default, stretching to cover any events outside that window
   let rangeStart = 8;
@@ -118,6 +122,15 @@ export function DayView({ events, day, onEventClick, onSlotClick }: Props) {
         <div className={'text-3xl font-bold ' + (isToday ? 'text-accent' : 'text-text')}>{day.getDate()}</div>
         <div className="text-lg text-text-muted">{DAY_LABELS[day.getDay()]}, {day.toLocaleString('default', { month: 'long' })}</div>
       </div>
+      {custody && (
+        <div
+          className="px-4 py-2 border-b border-border-themed flex items-center gap-2 text-sm font-medium"
+          style={{ backgroundColor: custody.color + '2e', color: custody.color }}
+        >
+          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: custody.color }} />
+          {custody.label}
+        </div>
+      )}
       {allDayEvents.length > 0 && (
         <div className="px-4 py-2 border-b border-border-themed space-y-1">
           {allDayEvents.map((event, i) => (

@@ -85,6 +85,9 @@ export function Calendar() {
   }
 
   const visibleEvents = selectedKeys === null ? events : events.filter(eventVisible);
+  // Custody-rule matches leave the event lists and instead tint their days
+  const custodyEvents = visibleEvents.filter((e) => e.custody);
+  const displayEvents = visibleEvents.filter((e) => !e.custody);
 
   const getRange = useCallback((): [Date, Date] => {
     if (view === 'agenda') {
@@ -277,10 +280,10 @@ export function Calendar() {
       )}
 
       <div className={loading ? 'opacity-50 transition-opacity' : 'transition-opacity'}>
-        {view === 'agenda' && <AgendaView events={visibleEvents} startDate={new Date()} days={AGENDA_DAYS} onEventClick={setSelectedEvent} />}
-        {view === 'month' && <MonthView events={visibleEvents} year={year} month={month} onEventClick={setSelectedEvent} onDayClick={goToDay} />}
-        {view === 'week' && <WeekView events={visibleEvents} weekStart={weekStart} onEventClick={setSelectedEvent} onSlotClick={goToDay} />}
-        {view === 'day' && <DayView events={visibleEvents} day={current} onEventClick={setSelectedEvent} onSlotClick={(d) => openCreateForm(d)} />}
+        {view === 'agenda' && <AgendaView events={displayEvents} custodyEvents={custodyEvents} startDate={new Date()} days={AGENDA_DAYS} onEventClick={setSelectedEvent} />}
+        {view === 'month' && <MonthView events={displayEvents} custodyEvents={custodyEvents} year={year} month={month} onEventClick={setSelectedEvent} onDayClick={goToDay} />}
+        {view === 'week' && <WeekView events={displayEvents} custodyEvents={custodyEvents} weekStart={weekStart} onEventClick={setSelectedEvent} onSlotClick={goToDay} />}
+        {view === 'day' && <DayView events={displayEvents} custodyEvents={custodyEvents} day={current} onEventClick={setSelectedEvent} onSlotClick={(d) => openCreateForm(d)} />}
       </div>
       <EventModal
         event={selectedEvent}

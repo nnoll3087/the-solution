@@ -2,7 +2,12 @@ import { readStore, writeStore } from './storage';
 
 export type CalendarConfig = { accountEmail: string; calendarId: string; displayName: string; color: string; enabled: boolean; };
 
-export type AppConfig = { calendars: CalendarConfig[]; };
+// Custody coloring: all-day events on one calendar whose titles match a rule are
+// hidden from event lists and instead tint the whole day in the rule's color.
+export type CustodyRule = { match: string; label: string; color: string };
+export type CustodyConfig = { calendarKey: string; rules: CustodyRule[] };
+
+export type AppConfig = { calendars: CalendarConfig[]; custody?: CustodyConfig };
 
 const DEFAULT_CONFIG: AppConfig = { calendars: [] };
 
@@ -29,4 +34,13 @@ export async function removeCalendarConfig(accountEmail: string, calendarId: str
 
 export async function getEnabledCalendars(): Promise<CalendarConfig[]> {
   return (await getConfig()).calendars.filter((c) => c.enabled);
+}
+
+export async function getCustodyConfig(): Promise<CustodyConfig | null> {
+  return (await getConfig()).custody ?? null;
+}
+
+export async function saveCustodyConfig(custody: CustodyConfig | null) {
+  const config = await getConfig();
+  await saveConfig({ ...config, custody: custody ?? undefined });
 }
