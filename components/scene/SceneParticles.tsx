@@ -1,10 +1,13 @@
 'use client';
 
 import { useMemo } from 'react';
+import { sanitizeSvg } from './sanitizeSvg';
 
 type Particle = {
-  shape: 'circle' | 'bubble' | 'star' | 'sparkle' | 'leaf' | 'snowflake' | 'petal' | 'dot' | 'diamond' | 'custom';
+  shape: 'circle' | 'bubble' | 'star' | 'sparkle' | 'leaf' | 'snowflake' | 'petal' | 'dot' | 'diamond' | 'custom' | 'emoji';
   customPath?: string;
+  customSvg?: string;
+  emoji?: string;
   count: number;
   sizeMin: number;
   sizeMax: number;
@@ -70,9 +73,28 @@ function isSafePath(d: string | undefined): d is string {
   return !!d && d.length <= 2000 && /^[MmLlHhVvCcSsQqTtAaZz0-9\s,.\-eE]+$/.test(d);
 }
 
-function ParticleShape({ shape, customPath, size, color, glow }: { shape: Particle['shape']; customPath?: string; size: number; color: string; glow: boolean }) {
+function ParticleShape({ shape, customPath, customSvg, emoji, size, color, glow }: { shape: Particle['shape']; customPath?: string; customSvg?: string; emoji?: string; size: number; color: string; glow: boolean }) {
   const filter = glow ? 'drop-shadow(0 0 ' + size / 2 + 'px ' + color + ')' : 'none';
   const commonStyle: React.CSSProperties = { width: size, height: size, filter };
+
+  if (shape === 'emoji' && emoji) {
+    return (
+      <div style={{ fontSize: size, lineHeight: 1, filter, userSelect: 'none' }}>{emoji}</div>
+    );
+  }
+
+  if (shape === 'custom' && customSvg) {
+    const safe = sanitizeSvg(customSvg);
+    if (safe) {
+      return (
+        <div
+          style={{ ...commonStyle, display: 'flex' }}
+          // Sanitized through a strict whitelist in sanitizeSvg
+          dangerouslySetInnerHTML={{ __html: safe.replace('<svg', '<svg width="' + size + '" height="' + size + '"') }}
+        />
+      );
+    }
+  }
 
   if (shape === 'custom' && isSafePath(customPath)) {
     return (
@@ -82,7 +104,7 @@ function ParticleShape({ shape, customPath, size, color, glow }: { shape: Partic
     );
   }
 
-  if (shape === 'circle' || shape === 'dot' || shape === 'bubble' || shape === 'custom') {
+  if (shape === 'circle' || shape === 'dot' || shape === 'bubble' || shape === 'custom' || shape === 'emoji') {
     return (
       <div style={{
         ...commonStyle,
@@ -211,7 +233,7 @@ export function SceneParticles({ particles }: Props) {
 
             return (
               <div key={p.id} style={style}>
-                <ParticleShape shape={system.shape} customPath={system.customPath} size={p.size} color={p.color} glow={system.glow} />
+                <ParticleShape shape={system.shape} customPath={system.customPath} customSvg={system.customSvg} emoji={system.emoji} size={p.size} color={p.color} glow={system.glow} />
               </div>
             );
           })

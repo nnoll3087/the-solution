@@ -31,8 +31,10 @@ export type SolidBackground = {
 export type Background = GradientBackground | SolidBackground;
 
 export type Particle = {
-  shape: 'circle' | 'bubble' | 'star' | 'sparkle' | 'leaf' | 'snowflake' | 'petal' | 'dot' | 'diamond' | 'custom';
-  customPath?: string; // SVG path in a 24x24 viewBox, used when shape is 'custom'
+  shape: 'circle' | 'bubble' | 'star' | 'sparkle' | 'leaf' | 'snowflake' | 'petal' | 'dot' | 'diamond' | 'custom' | 'emoji';
+  customPath?: string; // legacy: single SVG path in a 24x24 viewBox when shape is 'custom'
+  customSvg?: string;  // multi-element SVG markup (sanitized client-side) when shape is 'custom'
+  emoji?: string;      // the character(s) to render when shape is 'emoji'
   count: number;
   sizeMin: number;
   sizeMax: number;
@@ -55,14 +57,23 @@ export type Overlay = {
   size?: number;
 };
 
-export type Decoration = {
-  type: 'silhouette';
-  position: 'top' | 'bottom';
-  shape: 'mountains' | 'coral' | 'treeline' | 'cityscape' | 'hills' | 'waves' | 'clouds';
-  color: string;
-  height: number;
-  opacity: number;
-};
+export type Decoration =
+  | {
+      type: 'silhouette';
+      position: 'top' | 'bottom';
+      shape: 'mountains' | 'coral' | 'treeline' | 'cityscape' | 'hills' | 'waves' | 'clouds';
+      color: string;
+      height: number;
+      opacity: number;
+    }
+  | {
+      // AI-drawn scene art anchored to a corner or edge (sanitized client-side)
+      type: 'custom';
+      position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+      svg: string;
+      size: number; // px, square bounding box
+      opacity: number;
+    };
 
 export type Theme = {
   name: string;

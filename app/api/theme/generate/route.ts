@@ -36,8 +36,9 @@ The spec has these fields:
     "animationDuration": seconds (20-90 recommended)
   },
   "particles": array of particle systems, each with:
-    "shape": one of "circle" "bubble" "star" "sparkle" "leaf" "snowflake" "petal" "dot" "diamond" "custom",
-    "customPath": only when shape is "custom" — an SVG path in a 24x24 viewBox drawing a simple filled silhouette that matches the theme (a spider for Spider-Man, a rocket for space, a T-rex for dinosaurs). Path commands and numbers only, one closed shape, under 500 characters. The silhouette must read clearly at 10-30px,
+    "shape": one of "circle" "bubble" "star" "sparkle" "leaf" "snowflake" "petal" "dot" "diamond" "custom" "emoji",
+    "emoji": only when shape is "emoji" — one emoji character that nails the theme (spider for a spider theme, T-rex for dinosaurs, rocket for space, crown for princess, soccer ball for sports). Emoji render crisp and instantly recognizable; prefer this over "custom" for any creature or object that has a good emoji,
+    "customSvg": only when shape is "custom" — a complete small SVG: <svg viewBox="0 0 24 24">...</svg> using path/circle/ellipse/rect/line/polygon/g elements with fill, stroke, stroke-width, opacity attributes. Multi-element drawings with strokes look far better than one filled path (a spider = ellipse body + circle head + 8 stroked leg lines). Under 1500 characters. Must read clearly at 10-30px,
     "count": 5-60,
     "sizeMin": 2-8,
     "sizeMax": 8-40,
@@ -56,25 +57,31 @@ The spec has these fields:
     "color": "#hex",
     "opacity": 0-1,
     "size": optional pixels,
-  "decorations": array of silhouettes at edges, each with:
-    "type": "silhouette",
-    "position": one of "top" "bottom",
-    "shape": one of "mountains" "coral" "treeline" "cityscape" "hills" "waves" "clouds",
-    "color": "#hex",
-    "height": 60-200,
-    "opacity": 0-1
+  "decorations": array of scene art, each is ONE of:
+    {"type": "silhouette", "position": "top"|"bottom", "shape": "mountains"|"coral"|"treeline"|"cityscape"|"hills"|"waves"|"clouds", "color": "#hex", "height": 60-200, "opacity": 0-1}
+    {"type": "custom", "position": "top-left"|"top-right"|"bottom-left"|"bottom-right", "svg": "<svg viewBox=\\"0 0 100 100\\">...</svg>", "size": 150-400, "opacity": 0.15-0.5}
+    Custom decorations are large corner art and the single biggest wow lever. Line art with strokes works beautifully: a spiderweb (radial spokes from the corner + concentric arc rings, stroke only, no fill), tree branches, a moon with craters, planet with rings, castle turret. Use 2-8 elements, stroke-width 1-2, subtle opacity so content stays readable
 }
 
 DESIGN GUIDELINES:
-- Kid-friendly prompts (rainbow, unicorn, dinosaur, space, ocean) should feel magical: lots of particles, glow, animated gradients
-- Cozy prompts (autumn, minimalist, forest) should feel calm: fewer particles, gentler motion
-- Ocean: bubbles rising + coral silhouettes + blue depths + subtle wave overlay
-- Space: twinkling stars (twinkle direction, high count 40-60) + nebula gradient + optional radial glow
-- Autumn: falling leaves (down direction, 15-25 count) + treeline silhouette + warm gradient
-- Rainbow: colorful sparkles (twinkle) + arc gradient with 5+ color stops + high vibrancy
-- All text colors MUST have strong contrast against background
-- Always include at least 1 particle system unless truly minimalist
-- When the prompt names a character, creature, or object with a recognizable silhouette, use a "custom" particle for it (spiders, dinosaurs, rockets, hearts, fish, lightning bolts). Mix it with a simpler second system (sparkles, dots) for depth
+- GO FOR WOW. This is a family dashboard and the theme should make kids gasp. Every theme gets:
+  at least 2 particle systems (one theme-specific + one atmospheric like sparkles/dots), an
+  animated gradient background, and at least 1 decoration. Character/creature themes should also
+  get a custom corner decoration
+- THEME-SPECIFIC RECIPES (adapt the pattern to whatever is asked):
+  - Spider theme: emoji spider particles falling with wobble + a large stroked spiderweb custom
+    decoration in a top corner + dark red/blue gradient + tiny dot particles drifting
+  - Dinosaur: emoji T-rex + leaf particles falling + treeline silhouette + jungle green gradient
+  - Space: emoji rocket drifting + 50 twinkling stars + a ringed-planet custom corner decoration + nebula gradient
+  - Princess: emoji crown + sparkle particles twinkling with glow + a castle-turret corner decoration + pink/lavender gradient
+  - Ocean: bubbles rising + emoji fish drifting + coral silhouette + deep blue gradient + wave overlay
+  - Autumn: falling leaf particles + treeline silhouette + warm amber gradient
+- Kid-friendly prompts should feel magical: lots of particles, glow, animation. Cozy prompts (minimalist, forest): fewer, gentler
+- When the theme names a character, creature, or object: use its emoji as a particle system if a
+  fitting emoji exists, otherwise draw it with "custom" + customSvg. Never settle for generic
+  circles when something specific fits
+- All text colors MUST have strong contrast against background; overlays and decorations stay
+  subtle (low opacity) so the calendar stays readable
 - Prefer animated gradients for immersive themes
 - Be bold and distinct. No timid themes.
 - All colors are full 6-digit hex codes with # prefix`;
@@ -90,7 +97,7 @@ export async function POST(request: NextRequest) {
   try {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 4096,
+      max_tokens: 8192,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: 'Theme prompt: ' + prompt.trim() }],
     });

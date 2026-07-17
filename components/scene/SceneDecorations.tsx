@@ -1,6 +1,8 @@
 'use client';
 
-type Decoration = {
+import { sanitizeSvg } from './sanitizeSvg';
+
+type SilhouetteDecoration = {
   type: 'silhouette';
   position: 'top' | 'bottom';
   shape: 'mountains' | 'coral' | 'treeline' | 'cityscape' | 'hills' | 'waves' | 'clouds';
@@ -9,9 +11,46 @@ type Decoration = {
   opacity: number;
 };
 
+type CustomDecoration = {
+  type: 'custom';
+  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  svg: string;
+  size: number;
+  opacity: number;
+};
+
+type Decoration = SilhouetteDecoration | CustomDecoration;
+
+const CORNER_STYLES: Record<CustomDecoration['position'], React.CSSProperties> = {
+  'top-left': { top: 0, left: 0 },
+  'top-right': { top: 0, right: 0 },
+  'bottom-left': { bottom: 0, left: 0 },
+  'bottom-right': { bottom: 0, right: 0 },
+};
+
+function CustomArt({ d }: { d: CustomDecoration }) {
+  const safe = sanitizeSvg(d.svg);
+  if (!safe) return null;
+  const size = Math.min(Math.max(d.size || 200, 60), 600);
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        ...CORNER_STYLES[d.position] || CORNER_STYLES['top-right'],
+        width: size,
+        height: size,
+        opacity: d.opacity,
+        pointerEvents: 'none',
+      }}
+      // Sanitized through a strict whitelist in sanitizeSvg
+      dangerouslySetInnerHTML={{ __html: safe.replace('<svg', '<svg width="' + size + '" height="' + size + '"') }}
+    />
+  );
+}
+
 type Props = { decorations: Decoration[] };
 
-function shapePath(shape: Decoration['shape']): string {
+function shapePath(shape: SilhouetteDecoration['shape']): string {
   switch (shape) {
     case 'mountains':
       return 'M0 100 L0 60 L100 20 L200 55 L300 15 L400 40 L500 10 L600 45 L700 25 L800 50 L900 20 L1000 40 L1100 30 L1200 50 L1200 100 Z';
@@ -38,6 +77,7 @@ export function SceneDecorations({ decorations }: Props) {
   return (
     <div className="fixed inset-0 -z-10 pointer-events-none">
       {decorations.map((d, idx) => {
+        if (d.type === 'custom') return <CustomArt key={idx} d={d} />;
         const path = shapePath(d.shape);
         const style: React.CSSProperties = {
           position: 'absolute',
