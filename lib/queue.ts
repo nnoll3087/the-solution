@@ -92,6 +92,10 @@ export async function dismissAllForCalendar(accountEmail: string, calendarId: st
   await saveQueue(updated);
 }
 
+export async function clearQueue() {
+  await saveQueue({ entries: [] });
+}
+
 export async function pruneExpired() {
   const prefs = await getPreferences();
   const queue = await getQueue();

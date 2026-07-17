@@ -7,6 +7,7 @@ import {
   getQueue,
   dismissEntry,
   dismissAllForCalendar,
+  clearQueue,
   pruneExpired,
 } from '@/lib/queue';
 import { getAllTags, resolveTags, seriesId } from '@/lib/tags';
@@ -62,6 +63,11 @@ export async function POST(request: NextRequest) {
 
   if (action === 'dismiss_all_for_calendar' && accountEmail && calendarId) {
     await dismissAllForCalendar(accountEmail, calendarId);
+    return NextResponse.json({ success: true });
+  }
+
+  if (action === 'clear_all') {
+    await clearQueue();
     return NextResponse.json({ success: true });
   }
 

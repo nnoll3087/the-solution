@@ -122,7 +122,10 @@ export function QueueView() {
       </div>
 
       {showSettings && prefs && (
-        <QueueSettings prefs={prefs} people={people} entries={active} onSaved={loadPrefs} />
+        <>
+          <QueueSettings prefs={prefs} people={people} entries={active} onSaved={loadPrefs} />
+          <ClearQueueButton onCleared={load} />
+        </>
       )}
 
       {activePerson !== 'all' && byPerson[activePerson] && byPerson[activePerson].length > 0 && (
@@ -170,6 +173,51 @@ export function QueueView() {
             </li>
           ))}
         </ul>
+      )}
+    </div>
+  );
+}
+
+function ClearQueueButton({ onCleared }: { onCleared: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+  const [clearing, setClearing] = useState(false);
+
+  async function clearAll() {
+    setClearing(true);
+    await fetch('/api/queue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'clear_all' }),
+    });
+    setClearing(false);
+    setConfirming(false);
+    onCleared();
+  }
+
+  return (
+    <div className="bg-surface rounded-lg border border-border-themed p-4 flex items-center justify-between gap-3">
+      <div>
+        <div className="text-sm font-semibold text-text">Clear entire queue</div>
+        <p className="text-xs text-text-subtle mt-0.5">
+          Removes every entry for everyone, including dismissed history. Can&apos;t be undone.
+        </p>
+      </div>
+      {!confirming ? (
+        <button
+          onClick={() => setConfirming(true)}
+          className="px-3 py-2 rounded-lg bg-surface-elevated hover:bg-danger-themed/30 text-text-muted hover:text-danger-themed text-sm flex-shrink-0 transition"
+        >
+          Clear all
+        </button>
+      ) : (
+        <span className="flex items-center gap-2 flex-shrink-0">
+          <button onClick={() => setConfirming(false)} disabled={clearing} className="px-3 py-2 rounded-lg bg-surface-elevated hover:brightness-110 text-text text-sm">
+            Cancel
+          </button>
+          <button onClick={clearAll} disabled={clearing} className="px-3 py-2 rounded-lg bg-danger-themed hover:brightness-110 text-white text-sm font-medium disabled:opacity-50">
+            {clearing ? 'Clearing...' : 'Yes, clear everything'}
+          </button>
+        </span>
       )}
     </div>
   );
