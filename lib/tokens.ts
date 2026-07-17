@@ -3,7 +3,7 @@ import { readStore, writeStore } from './storage';
 
 const KEY = process.env.TOKEN_ENCRYPTION_KEY || '';
 
-type StoredToken = {
+export type StoredToken = {
   accountEmail: string;
   accessToken: string;
   refreshToken: string;

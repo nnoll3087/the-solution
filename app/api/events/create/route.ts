@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { google } from 'googleapis';
-import { getToken } from '@/lib/tokens';
+import { getCalendarForAccount, isAuthError } from '@/lib/google';
 
 type Reminder = {
   method: 'email' | 'popup';
@@ -44,22 +43,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  const token = await getToken(accountEmail);
-  if (!token) {
+  const calendar = await getCalendarForAccount(accountEmail);
+  if (!calendar) {
     return NextResponse.json({ error: 'No token for account' }, { status: 401 });
   }
-
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
-  );
-  oauth2Client.setCredentials({
-    access_token: token.accessToken,
-    refresh_token: token.refreshToken,
-  });
-
-  const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
   const tz = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -115,6 +102,12 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Failed to create event:', message);
+    if (isAuthError(error)) {
+      return NextResponse.json(
+        { error: 'Google connection for ' + accountEmail + ' has expired. Reconnect it on the Setup page.' },
+        { status: 401 }
+      );
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

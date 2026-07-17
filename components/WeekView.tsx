@@ -1,6 +1,7 @@
 'use client';
 
 import { NormalizedEvent } from '@/lib/events';
+import { eventOnDay } from '@/lib/dates';
 import { TagDots } from './TagDots';
 
 type Props = {
@@ -86,11 +87,7 @@ export function WeekView({ events, weekStart, onEventClick, onSlotClick }: Props
   function eventsForDay(day: Date): NormalizedEvent[] {
     const dayStart = new Date(day).setHours(0, 0, 0, 0);
     const dayEnd = new Date(day).setHours(23, 59, 59, 999);
-    return events.filter((e) => {
-      const s = new Date(e.start).getTime();
-      const en = new Date(e.end).getTime();
-      return s <= dayEnd && en >= dayStart;
-    });
+    return events.filter((e) => eventOnDay(e, dayStart, dayEnd));
   }
 
   function formatHour(h: number) {

@@ -9,6 +9,6 @@ export async function GET(request: NextRequest) {
   }
   const timeMin = new Date(timeMinParam);
   const timeMax = new Date(timeMaxParam);
-  const events = await fetchAllEvents(timeMin, timeMax);
-  return NextResponse.json({ events });
+  const { events, authErrors } = await fetchAllEvents(timeMin, timeMax);
+  return NextResponse.json({ events, authErrors });
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { NormalizedEvent } from '@/lib/events';
+import { eventOnDay } from '@/lib/dates';
 import { TagDots } from './TagDots';
 
 type Props = {
@@ -29,11 +30,7 @@ export function MonthView({ events, year, month, onEventClick, onDayClick }: Pro
   function eventsForDay(day: number): NormalizedEvent[] {
     const dayStart = new Date(year, month, day).setHours(0, 0, 0, 0);
     const dayEnd = new Date(year, month, day).setHours(23, 59, 59, 999);
-    return events.filter((e) => {
-      const evStart = new Date(e.start).getTime();
-      const evEnd = new Date(e.end).getTime();
-      return evStart <= dayEnd && evEnd >= dayStart;
-    });
+    return events.filter((e) => eventOnDay(e, dayStart, dayEnd));
   }
 
   function handleDayClick(day: number) {

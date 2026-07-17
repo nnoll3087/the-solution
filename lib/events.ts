@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { getToken } from './tokens';
+import { getAuthClient, isAuthError } from './google';
 import { getEnabledCalendars, CalendarConfig } from './config';
 import { getAllTags, resolveTags, seriesId } from './tags';
 
@@ -17,25 +18,25 @@ export type NormalizedEvent = {
   start: string;
   end: string;
   allDay: boolean;
+  organizerSelf?: boolean; // true when this calendar is the event's organizer
   tags?: string[];        // raw Solution-only tags (calendarKeys or 'family')
   alsoFor?: TaggedPerson[]; // tags resolved to people, home calendar excluded
 };
 
-function getAuthClient(accessToken: string, refreshToken: string) {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
-  );
-  oauth2Client.setCredentials({ access_token: accessToken, refresh_token: refreshToken });
-  return oauth2Client;
-}
+// Accounts whose Google connection is broken (revoked/expired token). The UI uses
+// this to show a "reconnect" state instead of silently rendering an empty calendar.
+export type EventsResult = {
+  events: NormalizedEvent[];
+  authErrors: string[]; // account emails needing reconnection
+  fetchFailed: boolean; // true when ANY calendar fetch errored (auth or transient)
+};
 
-async function fetchEventsForCalendar(cal: CalendarConfig, timeMin: string, timeMax: string): Promise<NormalizedEvent[]> {
+type CalendarFetch = { events: NormalizedEvent[]; authError?: string; fetchError?: boolean };
+
+async function fetchEventsForCalendar(cal: CalendarConfig, timeMin: string, timeMax: string): Promise<CalendarFetch> {
   const token = await getToken(cal.accountEmail);
-  if (!token) return [];
-  const auth = getAuthClient(token.accessToken, token.refreshToken);
-  const calendar = google.calendar({ version: 'v3', auth });
+  if (!token) return { events: [], authError: cal.accountEmail, fetchError: true };
+  const calendar = google.calendar({ version: 'v3', auth: getAuthClient(token) });
   try {
     const res = await calendar.events.list({
       calendarId: cal.calendarId,
@@ -46,7 +47,7 @@ async function fetchEventsForCalendar(cal: CalendarConfig, timeMin: string, time
       maxResults: 2500,
     });
     const items = res.data.items || [];
-    return items.map((item) => {
+    const events = items.map((item) => {
       const isAllDay = !!item.start?.date;
       return {
         id: item.id || Math.random().toString(36),
@@ -60,28 +61,36 @@ async function fetchEventsForCalendar(cal: CalendarConfig, timeMin: string, time
         start: item.start?.dateTime || item.start?.date || '',
         end: item.end?.dateTime || item.end?.date || '',
         allDay: isAllDay,
+        organizerSelf: item.organizer?.self === true,
       };
     });
+    return { events };
   } catch (error) {
     console.error('Failed to fetch events for ' + cal.displayName + ':', error);
-    return [];
+    if (isAuthError(error)) return { events: [], authError: cal.accountEmail, fetchError: true };
+    return { events: [], fetchError: true };
   }
 }
 
-export async function fetchAllEvents(timeMin: Date, timeMax: Date): Promise<NormalizedEvent[]> {
+export async function fetchAllEvents(timeMin: Date, timeMax: Date): Promise<EventsResult> {
   const enabled = await getEnabledCalendars();
   const results = await Promise.all(
     enabled.map((cal) => fetchEventsForCalendar(cal, timeMin.toISOString(), timeMax.toISOString()))
   );
-  const flat = results.flat();
-  const seen = new Set<string>();
-  const deduped: NormalizedEvent[] = [];
+  const authErrors = [...new Set(results.map((r) => r.authError).filter((e): e is string => !!e))];
+  const fetchFailed = results.some((r) => r.fetchError);
+  const flat = results.flatMap((r) => r.events);
+
+  // An event a family member was invited to appears on both calendars with the
+  // same ID. Keep the organizer's copy so it shows under the right person.
+  const byId = new Map<string, NormalizedEvent>();
   for (const event of flat) {
-    const key = event.id;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    deduped.push(event);
+    const existing = byId.get(event.id);
+    if (!existing || (event.organizerSelf && !existing.organizerSelf)) {
+      byId.set(event.id, event);
+    }
   }
+  const deduped = [...byId.values()];
 
   const tagsMap = await getAllTags();
   const byKey = new Map(enabled.map((c) => [c.accountEmail + '::' + c.calendarId, c]));
@@ -94,5 +103,5 @@ export async function fetchAllEvents(timeMin: Date, timeMax: Date): Promise<Norm
     );
   }
 
-  return deduped;
+  return { events: deduped, authErrors, fetchFailed };
 }

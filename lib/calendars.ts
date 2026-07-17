@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { getToken, getAllTokens } from './tokens';
+import { getAuthClient } from './google';
 
 export type CalendarInfo = {
   accountEmail: string;
@@ -12,25 +13,11 @@ export type CalendarInfo = {
   accessRole?: string;
 };
 
-function getAuthClient(accessToken: string, refreshToken: string) {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
-  );
-  oauth2Client.setCredentials({
-    access_token: accessToken,
-    refresh_token: refreshToken,
-  });
-  return oauth2Client;
-}
-
 export async function listCalendarsForAccount(accountEmail: string): Promise<CalendarInfo[]> {
   const token = await getToken(accountEmail);
   if (!token) return [];
 
-  const auth = getAuthClient(token.accessToken, token.refreshToken);
-  const calendar = google.calendar({ version: 'v3', auth });
+  const calendar = google.calendar({ version: 'v3', auth: getAuthClient(token) });
 
   try {
     const res = await calendar.calendarList.list({ maxResults: 250 });

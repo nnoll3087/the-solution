@@ -19,10 +19,17 @@ export async function GET() {
   const timeMin = now;
   const timeMax = new Date(now.getTime() + LOOKAHEAD_DAYS * 24 * 60 * 60 * 1000);
 
-  const events = await fetchAllEvents(timeMin, timeMax);
-  const changes = await detectChanges(events);
-  const added = await addChangesToQueue(changes);
-  await saveSnapshot(events);
+  const { events, authErrors, fetchFailed } = await fetchAllEvents(timeMin, timeMax);
+  // ANY failed calendar fetch (broken connection, rate limit, Google hiccup)
+  // makes that calendar's events vanish from this fetch; diffing against that
+  // floods the queue with false "deleted" entries, then false "new" entries when
+  // it recovers. Only run change detection on a fully successful fetch.
+  let added = 0;
+  if (!fetchFailed) {
+    const changes = await detectChanges(events);
+    added = await addChangesToQueue(changes);
+    await saveSnapshot(events);
+  }
   await pruneExpired();
 
   const queue = await getQueue();
@@ -39,6 +46,7 @@ export async function GET() {
   return NextResponse.json({
     entries,
     detectedChanges: added,
+    authErrors,
     lastRun: new Date().toISOString(),
   });
 }

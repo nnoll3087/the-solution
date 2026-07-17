@@ -1,6 +1,7 @@
 'use client';
 
 import { NormalizedEvent } from '@/lib/events';
+import { eventOnDay } from '@/lib/dates';
 import { TagDots } from './TagDots';
 
 type Props = {
@@ -31,11 +32,7 @@ export function AgendaView({ events, startDate, days, onEventClick }: Props) {
     const dayStart = new Date(date).setHours(0, 0, 0, 0);
     const dayEnd = new Date(date).setHours(23, 59, 59, 999);
     const dayEvents = events
-      .filter((e) => {
-        const s = new Date(e.start).getTime();
-        const en = new Date(e.end).getTime();
-        return s <= dayEnd && en >= dayStart;
-      })
+      .filter((e) => eventOnDay(e, dayStart, dayEnd))
       .sort((a, b) => {
         if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
         return new Date(a.start).getTime() - new Date(b.start).getTime();

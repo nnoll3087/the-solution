@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { google } from 'googleapis';
-import { getToken } from '@/lib/tokens';
+import { getCalendarForAccount, isAuthError } from '@/lib/google';
 
 type Reminder = {
   method: 'email' | 'popup';
@@ -29,19 +28,11 @@ type EventDeletePayload = {
   eventId: string;
 };
 
-async function getCalendarClient(accountEmail: string) {
-  const token = await getToken(accountEmail);
-  if (!token) return null;
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
+function authExpiredResponse(accountEmail: string) {
+  return NextResponse.json(
+    { error: 'Google connection for ' + accountEmail + ' has expired. Reconnect it on the Setup page.' },
+    { status: 401 }
   );
-  oauth2Client.setCredentials({
-    access_token: token.accessToken,
-    refresh_token: token.refreshToken,
-  });
-  return google.calendar({ version: 'v3', auth: oauth2Client });
 }
 
 export async function PATCH(request: NextRequest) {
@@ -52,7 +43,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  const calendar = await getCalendarClient(accountEmail);
+  const calendar = await getCalendarForAccount(accountEmail);
   if (!calendar) {
     return NextResponse.json({ error: 'No token for account' }, { status: 401 });
   }
@@ -115,6 +106,7 @@ export async function PATCH(request: NextRequest) {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Failed to update event:', message);
+    if (isAuthError(error)) return authExpiredResponse(accountEmail);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -127,7 +119,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  const calendar = await getCalendarClient(accountEmail);
+  const calendar = await getCalendarForAccount(accountEmail);
   if (!calendar) {
     return NextResponse.json({ error: 'No token for account' }, { status: 401 });
   }
@@ -138,6 +130,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Failed to delete event:', message);
+    if (isAuthError(error)) return authExpiredResponse(accountEmail);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

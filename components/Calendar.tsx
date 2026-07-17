@@ -65,6 +65,7 @@ export function Calendar() {
   }
 
   const [events, setEvents] = useState<NormalizedEvent[]>([]);
+  const [authErrors, setAuthErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<NormalizedEvent | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -116,7 +117,10 @@ export function Calendar() {
     setLoading(true);
     fetch('/api/events?timeMin=' + encodeURIComponent(tMin.toISOString()) + '&timeMax=' + encodeURIComponent(tMax.toISOString()))
       .then((r) => r.json())
-      .then((data) => setEvents(data.events || []))
+      .then((data) => {
+        setEvents(data.events || []);
+        setAuthErrors(data.authErrors || []);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [getRange]);
@@ -193,6 +197,19 @@ export function Calendar() {
 
   return (
     <div>
+      {authErrors.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3 px-4 py-3 rounded-lg border border-red-500/40 bg-red-500/10 text-sm text-text">
+          <span>
+            <span className="font-semibold">Google connection expired</span>
+            {' — events from '}
+            {authErrors.join(' and ')}
+            {' can’t be loaded.'}
+          </span>
+          <a href="/setup" className="px-3 py-1.5 rounded-lg bg-accent text-white font-medium whitespace-nowrap">
+            Reconnect
+          </a>
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div className="text-xl sm:text-2xl font-semibold text-text">{headerLabel()}</div>
         <div className="flex flex-wrap items-center gap-2">

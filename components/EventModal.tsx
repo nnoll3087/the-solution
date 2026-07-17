@@ -1,6 +1,7 @@
 'use client';
 
 import { NormalizedEvent } from '@/lib/events';
+import { parseLocalDate } from '@/lib/dates';
 import { useEffect, useState } from 'react';
 
 type Props = {
@@ -43,7 +44,14 @@ export function EventModal({ event, onClose, onEdit, onDeleted }: Props) {
   }
 
   function timeLabel(): string {
-    if (event!.allDay) return 'All day, ' + fmtDate(start);
+    if (event!.allDay) {
+      const s = parseLocalDate(event!.start);
+      // Google's all-day end is exclusive; show the real last day
+      const e = parseLocalDate(event!.end);
+      e.setDate(e.getDate() - 1);
+      if (s.toDateString() === e.toDateString()) return 'All day, ' + fmtDate(s);
+      return 'All day, ' + fmtDate(s) + ' to ' + fmtDate(e);
+    }
     const sameDay = start.toDateString() === end.toDateString();
     if (sameDay) return fmtDate(start) + ', ' + fmtTime(start) + ' to ' + fmtTime(end);
     return fmtDate(start) + ' ' + fmtTime(start) + ' to ' + fmtDate(end) + ' ' + fmtTime(end);
