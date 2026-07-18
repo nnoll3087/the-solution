@@ -81,7 +81,7 @@ export function QueuePreview() {
               <li key={person}>
                 <a
                   href={'/queue?person=' + encodeURIComponent(person)}
-                  className="flex items-center justify-between bg-bg/60 rounded-md px-3 py-2.5 min-h-[44px] border border-border-themed hover:bg-surface-elevated/60 transition"
+                  className="flex items-center justify-between bg-bg/25 rounded-md px-3 py-2.5 min-h-[44px] border border-border-themed hover:bg-surface-elevated/60 transition"
                 >
                   <span className="text-sm font-medium text-text">{person}</span>
                   <span className="text-xs text-text-muted">{parts.join(', ')}</span>

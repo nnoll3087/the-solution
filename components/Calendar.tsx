@@ -216,13 +216,13 @@ export function Calendar() {
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div className="text-xl sm:text-2xl font-semibold text-text">{headerLabel()}</div>
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={createOnViewedDay} className="px-3 py-2 min-h-[40px] rounded-lg bg-success-themed hover:brightness-110 text-white text-sm font-medium">+ New</button>
-          <div className="flex rounded-lg overflow-hidden border border-border-themed">
+          <button onClick={createOnViewedDay} className="px-3 py-2 min-h-[40px] rounded-lg bg-text text-bg hover:opacity-85 text-sm font-semibold whitespace-nowrap transition">+ New</button>
+          <div className="flex rounded-lg overflow-hidden border border-border-themed bg-surface/80 backdrop-blur">
             {(['agenda', 'day', 'week', 'month'] as ViewMode[]).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={'px-2.5 sm:px-3 py-2 min-h-[40px] text-sm capitalize ' + (view === v ? 'bg-accent text-white' : 'bg-surface hover:bg-surface-elevated text-text-muted')}
+                className={'px-2.5 sm:px-3 py-2 min-h-[40px] text-sm capitalize transition ' + (view === v ? 'bg-text text-bg font-semibold' : 'text-text-muted hover:text-text')}
               >
                 {v}
               </button>
@@ -230,9 +230,9 @@ export function Calendar() {
           </div>
           {view !== 'agenda' && (
             <div className="flex gap-1">
-              <button onClick={goPrev} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface hover:bg-surface-elevated text-text text-sm">‹</button>
-              <button onClick={goToday} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface hover:bg-surface-elevated text-text text-sm">Today</button>
-              <button onClick={goNext} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface hover:bg-surface-elevated text-text text-sm">›</button>
+              <button onClick={goPrev} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface/80 backdrop-blur border border-border-themed hover:bg-surface-elevated text-text text-sm transition">‹</button>
+              <button onClick={goToday} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface/80 backdrop-blur border border-border-themed hover:bg-surface-elevated text-text text-sm whitespace-nowrap transition">Today</button>
+              <button onClick={goNext} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface/80 backdrop-blur border border-border-themed hover:bg-surface-elevated text-text text-sm transition">›</button>
             </div>
           )}
         </div>
@@ -245,8 +245,8 @@ export function Calendar() {
             className={
               'px-3 py-1.5 min-h-[36px] rounded-full text-sm font-medium border transition ' +
               (selectedKeys === null
-                ? 'bg-accent text-white border-accent'
-                : 'bg-surface/80 text-text-muted border-border-themed hover:text-text')
+                ? 'bg-text text-bg border-transparent font-semibold'
+                : 'bg-surface/80 backdrop-blur text-text-muted border-border-themed hover:text-text')
             }
           >
             Family
@@ -263,8 +263,8 @@ export function Calendar() {
                   (on && selectedKeys !== null
                     ? 'text-white'
                     : on
-                      ? 'bg-surface/80 text-text border-border-themed'
-                      : 'bg-surface/50 text-text-subtle border-border-themed hover:text-text-muted')
+                      ? 'bg-surface/80 backdrop-blur text-text border-border-themed'
+                      : 'bg-surface/40 backdrop-blur text-text-subtle border-border-themed hover:text-text-muted opacity-70')
                 }
                 style={on && selectedKeys !== null ? { backgroundColor: c.color, borderColor: c.color } : undefined}
               >

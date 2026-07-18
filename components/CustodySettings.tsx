@@ -51,7 +51,7 @@ export function CustodySettings({ calendars, initialCalendarKey, initialRules }:
     setTimeout(() => setSaved(false), 3000);
   }
 
-  const inputCls = 'bg-bg border border-border-themed rounded px-2 py-1.5 text-sm text-text';
+  const inputCls = 'bg-bg/50 border border-border-themed rounded-md px-2 py-1.5 text-sm text-text';
 
   return (
     <div className="space-y-4">

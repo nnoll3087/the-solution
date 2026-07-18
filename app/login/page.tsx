@@ -48,7 +48,7 @@ export default function LoginPage() {
           placeholder="Password"
           autoFocus
           autoComplete="current-password"
-          className="w-full bg-bg border border-border-themed rounded-lg px-4 py-3 text-text text-lg"
+          className="w-full bg-bg/50 border border-border-themed rounded-lg px-4 py-3 text-text text-lg"
         />
 
         {error && (

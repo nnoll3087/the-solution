@@ -137,8 +137,8 @@ export function DayView({ events, custodyEvents = [], day, onEventClick, onSlotC
             <button
               key={'day-allday-' + i + '-' + event.id}
               onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(event); }}
-              className="flex w-full items-center gap-1.5 text-left rounded px-2 py-1 text-sm hover:brightness-125 transition"
-              style={{ backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}
+              className="flex w-full items-center gap-1.5 text-left rounded px-2 py-1 text-sm text-text hover:brightness-110 transition"
+              style={{ backgroundColor: event.color + '30', borderLeft: '3px solid ' + event.color }}
             >
               <span className="truncate flex-1">{event.title}</span>
               <TagDots alsoFor={event.alsoFor} />
@@ -164,14 +164,13 @@ export function DayView({ events, custodyEvents = [], day, onEventClick, onSlotC
             <button
               key={'day-timed-' + i + '-' + p.event.id}
               onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(p.event); }}
-              className="absolute rounded px-2 py-1 text-sm text-left hover:brightness-125 transition"
+              className="absolute rounded px-2 py-1 text-sm text-left text-text hover:brightness-110 transition"
               style={{
                 top: p.top + 'px',
                 height: p.height + 'px',
                 left: 'calc(' + p.leftPct + '% + 8px)',
                 width: 'calc(' + p.widthPct + '% - 16px)',
-                backgroundColor: p.event.color + '33',
-                color: p.event.color,
+                backgroundColor: p.event.color + '30',
                 borderLeft: '3px solid ' + p.event.color,
               }}
             >

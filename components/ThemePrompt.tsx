@@ -53,7 +53,7 @@ export function ThemePrompt() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="px-3 py-2 rounded-lg bg-surface hover:bg-surface-elevated text-text text-sm border border-border-themed"
+        className="px-3 py-2 min-h-[40px] rounded-lg bg-surface/80 backdrop-blur hover:bg-surface-elevated text-text text-sm border border-border-themed whitespace-nowrap transition"
         title="Current theme"
       >
         <span className="mr-2">🎨</span>
@@ -73,7 +73,7 @@ export function ThemePrompt() {
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
               placeholder="ocean, rainbow, space..."
-              className="w-full bg-bg border border-border-themed rounded-md px-3 py-2 text-text text-sm"
+              className="w-full bg-bg/50 border border-border-themed rounded-md px-3 py-2 text-text text-sm"
               autoFocus
             />
             <p className="text-xs text-text-subtle mt-1">Press Enter to apply. Takes ~10 seconds.</p>
@@ -123,7 +123,7 @@ export function ThemePrompt() {
                         onKeyDown={(e) => { if (e.key === 'Enter') saveBalance(); }}
                         placeholder="20.00"
                         autoFocus
-                        className="w-16 bg-bg border border-border-themed rounded px-1.5 py-0.5 text-text"
+                        className="w-16 bg-bg/50 border border-border-themed rounded px-1.5 py-0.5 text-text"
                       />
                       <button onClick={saveBalance} className="text-accent hover:brightness-125">Save</button>
                     </span>

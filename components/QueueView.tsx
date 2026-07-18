@@ -95,11 +95,11 @@ export function QueueView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setActivePerson('all')}
-            className={'px-3 py-1.5 rounded-lg text-sm ' + (activePerson === 'all' ? 'bg-accent text-white' : 'bg-surface hover:bg-surface-elevated text-text-muted')}
+            className={'px-3 py-1.5 min-h-[36px] rounded-full text-sm whitespace-nowrap border transition ' + (activePerson === 'all' ? 'bg-text text-bg font-semibold border-transparent' : 'bg-surface/80 backdrop-blur border-border-themed hover:bg-surface-elevated text-text-muted')}
           >
             All ({active.length})
           </button>
@@ -107,15 +107,15 @@ export function QueueView() {
             <button
               key={p}
               onClick={() => setActivePerson(p)}
-              className={'px-3 py-1.5 rounded-lg text-sm ' + (activePerson === p ? 'bg-accent text-white' : 'bg-surface hover:bg-surface-elevated text-text-muted')}
-            >
+              className={'px-3 py-1.5 min-h-[36px] rounded-full text-sm whitespace-nowrap border transition ' + (activePerson === p ? 'bg-text text-bg font-semibold border-transparent' : 'bg-surface/80 backdrop-blur border-border-themed hover:bg-surface-elevated text-text-muted')}
+          >
               {p} ({byPerson[p].length})
             </button>
           ))}
         </div>
         <button
           onClick={() => setShowSettings(!showSettings)}
-          className="px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-elevated text-text-muted text-sm"
+          className="px-3 py-1.5 min-h-[36px] rounded-full bg-surface/80 backdrop-blur border border-border-themed hover:bg-surface-elevated text-text-muted text-sm whitespace-nowrap transition"
         >
           {showSettings ? 'Close settings' : 'Settings'}
         </button>
@@ -146,7 +146,7 @@ export function QueueView() {
       ) : (
         <ul className="space-y-2">
           {filtered.map((entry) => (
-            <li key={entry.id} className="bg-surface border border-border-themed rounded-lg p-4">
+            <li key={entry.id} className="bg-surface/80 backdrop-blur border border-border-themed rounded-lg p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -195,7 +195,7 @@ function ClearQueueButton({ onCleared }: { onCleared: () => void }) {
   }
 
   return (
-    <div className="bg-surface rounded-lg border border-border-themed p-4 flex items-center justify-between gap-3">
+    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed p-4 flex flex-wrap items-center justify-between gap-3">
       <div>
         <div className="text-sm font-semibold text-text">Clear entire queue</div>
         <p className="text-xs text-text-subtle mt-0.5">
@@ -310,8 +310,8 @@ function QueueSettings({
   }
 
   return (
-    <div className="bg-surface rounded-lg border border-border-themed p-4 space-y-4">
-      <h3 className="text-sm font-semibold text-text uppercase tracking-wide">Auto-clear settings</h3>
+    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed p-4 space-y-4">
+      <h3 className="text-base font-semibold text-text">Auto-clear settings</h3>
 
       <div>
         <div className="text-sm text-text-muted mb-2">Default (applies to everyone unless overridden)</div>
@@ -319,7 +319,7 @@ function QueueSettings({
           <select
             value={defaultMode}
             onChange={(e) => { const m = e.target.value as ClearMode; setDefaultMode(m); saveDefaults(m, defaultHours); }}
-            className="bg-bg border border-border-themed rounded px-2 py-1 text-sm text-text"
+            className="bg-bg/50 border border-border-themed rounded-md px-2 py-1.5 text-sm text-text"
           >
             <option value="never">Never auto-clear</option>
             <option value="hours">After hours</option>
@@ -337,7 +337,7 @@ function QueueSettings({
                   setDefaultHours(hours);
                   saveDefaults(defaultMode, hours);
                 }}
-                className="bg-bg border border-border-themed rounded px-2 py-1 text-sm text-text w-16"
+                className="bg-bg/50 border border-border-themed rounded-md px-2 py-1.5 text-sm text-text w-16"
               />
               <span className="text-sm text-text-muted">{defaultMode}</span>
             </>
@@ -362,7 +362,7 @@ const hours = pref?.clearAfterHours ?? defaultHours;
                       const m = e.target.value as ClearMode;
                       savePerson(person, m, hours);
                     }}
-                    className="bg-bg border border-border-themed rounded px-2 py-1 text-sm text-text"
+                    className="bg-bg/50 border border-border-themed rounded-md px-2 py-1.5 text-sm text-text"
                   >
                     <option value="never">Never</option>
                     <option value="hours">After hours</option>
@@ -379,7 +379,7 @@ const hours = pref?.clearAfterHours ?? defaultHours;
                           const newHours = mode === 'days' ? v * 24 : v;
                           savePerson(person, mode, newHours);
                         }}
-                        className="bg-bg border border-border-themed rounded px-2 py-1 text-sm text-text w-16"
+                        className="bg-bg/50 border border-border-themed rounded-md px-2 py-1.5 text-sm text-text w-16"
                       />
                       <span className="text-text-muted">{mode}</span>
                     </>

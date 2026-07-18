@@ -159,8 +159,8 @@ export function WeekView({ events, custodyEvents = [], weekStart, onEventClick, 
                 <button
                   key={di + '-allday-' + i + '-' + event.id}
                   onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(event); }}
-                  className="absolute left-1 right-1 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-left hover:brightness-125 transition"
-                  style={{ top: i * 20 + 'px', backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}
+                  className="absolute left-1 right-1 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-left text-text hover:brightness-110 transition"
+                  style={{ top: i * 20 + 'px', backgroundColor: event.color + '30', borderLeft: '3px solid ' + event.color }}
                 >
                   <span className="truncate flex-1">{event.title}</span>
                   <TagDots alsoFor={event.alsoFor} />
@@ -170,14 +170,13 @@ export function WeekView({ events, custodyEvents = [], weekStart, onEventClick, 
                 <button
                   key={di + '-timed-' + i + '-' + p.event.id}
                   onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(p.event); }}
-                  className="absolute rounded px-1 py-0.5 text-xs text-left hover:brightness-125 transition overflow-hidden"
+                  className="absolute rounded px-1 py-0.5 text-xs text-left text-text hover:brightness-110 transition overflow-hidden"
                   style={{
                     top: p.top + 'px',
                     height: p.height + 'px',
                     left: 'calc(' + p.leftPct + '% + 2px)',
                     width: 'calc(' + p.widthPct + '% - 4px)',
-                    backgroundColor: p.event.color + '33',
-                    color: p.event.color,
+                    backgroundColor: p.event.color + '30',
                     borderLeft: '3px solid ' + p.event.color,
                   }}
                 >

@@ -98,7 +98,7 @@ export function CalendarSelector({
               const currentColor = config?.color || cal.backgroundColor || '#666';
               const pickerOpen = openPicker === key;
               return (
-                <li key={cal.calendarId} className="bg-bg rounded-md border border-border-themed">
+                <li key={cal.calendarId} className="bg-bg/25 rounded-md border border-border-themed">
                   <div className="flex items-center gap-3 text-sm px-3 py-2">
                     <input
                       type="checkbox"
@@ -119,7 +119,7 @@ export function CalendarSelector({
                         type="text"
                         defaultValue={config?.displayName}
                         onBlur={(e) => save(cal, { displayName: e.target.value })}
-                        className="bg-surface text-text border border-border-themed rounded px-2 py-1 text-sm flex-1"
+                        className="bg-bg/40 text-text border border-border-themed rounded-md px-2 py-1.5 text-sm flex-1 min-w-0"
                       />
                     ) : (
                       <span className="text-text-muted flex-1 truncate">{cal.summary}</span>

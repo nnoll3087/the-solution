@@ -263,7 +263,7 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
 
   if (!open) return null;
 
-  const inputCls = 'w-full bg-bg border border-border-themed rounded-md px-3 py-2 text-text text-sm';
+  const inputCls = 'w-full bg-bg/50 border border-border-themed rounded-md px-3 py-2 text-text text-sm';
   const labelCls = 'block text-xs uppercase tracking-wide text-text-muted mb-1';
 
   return (
@@ -398,11 +398,11 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
             <div className="space-y-2">
               {reminders.map((r, i) => (
                 <div key={i} className="flex gap-2 items-center">
-                  <select value={r.method} onChange={(e) => updateReminder(i, { method: e.target.value as 'email' | 'popup' })} className="bg-bg border border-border-themed rounded-md px-2 py-1.5 text-text text-sm">
+                  <select value={r.method} onChange={(e) => updateReminder(i, { method: e.target.value as 'email' | 'popup' })} className="bg-bg/50 border border-border-themed rounded-md px-2 py-1.5 text-text text-sm">
                     <option value="popup">Notification</option>
                     <option value="email">Email</option>
                   </select>
-                  <select value={r.minutes} onChange={(e) => updateReminder(i, { minutes: parseInt(e.target.value) })} className="flex-1 bg-bg border border-border-themed rounded-md px-2 py-1.5 text-text text-sm">
+                  <select value={r.minutes} onChange={(e) => updateReminder(i, { minutes: parseInt(e.target.value) })} className="flex-1 bg-bg/50 border border-border-themed rounded-md px-2 py-1.5 text-text text-sm">
                     {REMINDER_PRESETS.map((p) => (
                       <option key={p.minutes} value={p.minutes}>{p.label}</option>
                     ))}

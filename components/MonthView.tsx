@@ -85,8 +85,8 @@ export function MonthView({ events, custodyEvents = [], year, month, onEventClic
                       <button
                         key={event.id + '-' + i}
                         onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(event); }}
-                        className="flex w-full items-center gap-1 text-left text-xs rounded px-1 py-px hover:brightness-125 transition"
-                        style={{ backgroundColor: event.color + '33', color: event.color, borderLeft: '3px solid ' + event.color }}
+                        className="flex w-full items-center gap-1 text-left text-xs rounded px-1 py-px text-text hover:brightness-110 transition"
+                        style={{ backgroundColor: event.color + '30', borderLeft: '3px solid ' + event.color }}
                       >
                         <span className="truncate flex-1 leading-5">{event.title}</span>
                         <TagDots alsoFor={event.alsoFor} />

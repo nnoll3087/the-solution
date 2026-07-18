@@ -35,3 +35,12 @@ html, body {
   color: var(--theme-text);
   transition: color 300ms ease;
 }
+
+/* Theme-colored focus + native control tinting instead of browser blue */
+:focus-visible {
+  outline: 2px solid var(--theme-accent);
+  outline-offset: 1px;
+}
+input, select, textarea, button {
+  accent-color: var(--theme-accent);
+}
