@@ -63,22 +63,31 @@ export function MonthView({ events, custodyEvents = [], year, month, onEventClic
             <div
               key={idx}
               onClick={day ? () => handleDayClick(day) : undefined}
-              className={'min-h-[72px] sm:min-h-[112px] border-b border-r border-border-themed p-1 sm:p-1.5 ' + (day ? 'cursor-pointer hover:brightness-110 transition ' + (custody ? '' : 'bg-bg/60') : 'bg-surface/30')}
+              className={'min-h-[92px] sm:min-h-[112px] border-b border-r border-border-themed p-0.5 sm:p-1.5 ' + (day ? 'cursor-pointer hover:brightness-110 transition ' + (custody ? '' : 'bg-bg/60') : 'bg-surface/30')}
               style={custody ? { backgroundColor: custody.color + '2e' } : undefined}
               title={custody?.label}
             >
               {day && (
                 <>
-                  <div className={'text-sm font-medium mb-0.5 ' + (isToday ? 'text-accent' : 'text-text-muted')}>
+                  <div className={'text-sm font-medium mb-0.5 text-center sm:text-left ' + (isToday ? 'text-accent' : 'text-text-muted')}>
                     {isToday ? (
                       <span className="inline-flex items-center justify-center w-6 h-6 bg-accent text-white rounded-full text-xs">{day}</span>
                     ) : (day)}
                   </div>
-                  {/* Phones: color dots only; the agenda view is the readable list there */}
-                  <div className="flex flex-wrap gap-1 sm:hidden">
-                    {dayEvents.slice(0, 8).map((event, i) => (
-                      <span key={event.id + '-' + i} className="w-2 h-2 rounded-full" style={{ backgroundColor: event.color }} />
+                  {/* Phones: mini chips with truncated titles; tap the day for the full list */}
+                  <div className="sm:hidden space-y-px">
+                    {dayEvents.slice(0, 3).map((event, i) => (
+                      <div
+                        key={event.id + '-' + i}
+                        className="truncate rounded-[3px] px-0.5 py-px text-[9px] font-medium leading-[13px] text-text"
+                        style={{ backgroundColor: event.color + '30', borderLeft: '2px solid ' + event.color }}
+                      >
+                        {event.title}
+                      </div>
                     ))}
+                    {dayEvents.length > 3 && (
+                      <div className="text-[9px] leading-[12px] text-text-subtle px-0.5">+{dayEvents.length - 3} more</div>
+                    )}
                   </div>
                   <div className="hidden sm:block space-y-0.5">
                     {dayEvents.slice(0, 5).map((event, i) => (

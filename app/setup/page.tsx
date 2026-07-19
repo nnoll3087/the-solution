@@ -4,6 +4,7 @@ import { listAllCalendars } from '@/lib/calendars';
 import { getConfig } from '@/lib/config';
 import { CalendarSelector } from '@/components/CalendarSelector';
 import { CustodySettings } from '@/components/CustodySettings';
+import { ExclusionSettings } from '@/components/ExclusionSettings';
 
 export default async function SetupPage({ searchParams }: { searchParams: Promise<{ connected?: string }> }) {
   const params = await searchParams;
@@ -58,6 +59,12 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
               initialCalendarKey={config.custody?.calendarKey || ''}
               initialRules={config.custody?.rules || []}
             />
+          </div>
+        )}
+        {config.calendars.length > 0 && (
+          <div className="bg-surface/80 backdrop-blur rounded-lg p-6 border border-border-themed mb-6">
+            <h2 className="text-lg font-semibold mb-4">Hidden Events</h2>
+            <ExclusionSettings initialPhrases={config.excludedTitles ?? []} />
           </div>
         )}
         <a href="/api/auth/google/start" className="inline-block bg-accent hover:bg-accent-hover text-white font-medium rounded-lg px-6 py-3 transition-colors">Connect another Google Account</a>

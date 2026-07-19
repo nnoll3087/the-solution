@@ -91,10 +91,10 @@ export function Calendar() {
 
   const getRange = useCallback((): [Date, Date] => {
     if (view === 'agenda') {
-      const s = new Date();
+      const s = new Date(current);
       s.setHours(0, 0, 0, 0);
       const e = new Date(s);
-      e.setDate(s.getDate() + AGENDA_DAYS);
+      e.setDate(s.getDate() + AGENDA_DAYS - 1);
       e.setHours(23, 59, 59, 999);
       return [s, e];
     }
@@ -136,6 +136,7 @@ export function Calendar() {
     const d = new Date(current);
     if (view === 'month') d.setMonth(d.getMonth() - 1);
     else if (view === 'week') d.setDate(d.getDate() - 7);
+    else if (view === 'agenda') d.setDate(d.getDate() - AGENDA_DAYS);
     else d.setDate(d.getDate() - 1);
     setCurrent(d);
   }
@@ -143,6 +144,7 @@ export function Calendar() {
     const d = new Date(current);
     if (view === 'month') d.setMonth(d.getMonth() + 1);
     else if (view === 'week') d.setDate(d.getDate() + 7);
+    else if (view === 'agenda') d.setDate(d.getDate() + AGENDA_DAYS);
     else d.setDate(d.getDate() + 1);
     setCurrent(d);
   }
@@ -183,7 +185,13 @@ export function Calendar() {
   }
 
   function headerLabel(): string {
-    if (view === 'agenda') return 'Next ' + AGENDA_DAYS + ' days';
+    if (view === 'agenda') {
+      const [s, e] = getRange();
+      if (s.toDateString() === new Date().toDateString()) return 'Next ' + AGENDA_DAYS + ' days';
+      const sm = s.toLocaleString('default', { month: 'short', day: 'numeric' });
+      const em = e.toLocaleString('default', { month: 'short', day: 'numeric' });
+      return sm + ' to ' + em + ', ' + s.getFullYear();
+    }
     if (view === 'month') return current.toLocaleString('default', { month: 'long', year: 'numeric' });
     if (view === 'week') {
       const [s, e] = getRange();
@@ -228,13 +236,11 @@ export function Calendar() {
               </button>
             ))}
           </div>
-          {view !== 'agenda' && (
-            <div className="flex gap-1">
-              <button onClick={goPrev} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface/80 backdrop-blur border border-border-themed hover:bg-surface-elevated text-text text-sm transition">‹</button>
-              <button onClick={goToday} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface/80 backdrop-blur border border-border-themed hover:bg-surface-elevated text-text text-sm whitespace-nowrap transition">Today</button>
-              <button onClick={goNext} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface/80 backdrop-blur border border-border-themed hover:bg-surface-elevated text-text text-sm transition">›</button>
-            </div>
-          )}
+          <div className="flex gap-1">
+            <button onClick={goPrev} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface/80 backdrop-blur border border-border-themed hover:bg-surface-elevated text-text text-sm transition">‹</button>
+            <button onClick={goToday} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface/80 backdrop-blur border border-border-themed hover:bg-surface-elevated text-text text-sm whitespace-nowrap transition">Today</button>
+            <button onClick={goNext} className="px-3 py-2 min-h-[40px] rounded-lg bg-surface/80 backdrop-blur border border-border-themed hover:bg-surface-elevated text-text text-sm transition">›</button>
+          </div>
         </div>
       </div>
 
@@ -280,7 +286,7 @@ export function Calendar() {
       )}
 
       <div className={loading ? 'opacity-50 transition-opacity' : 'transition-opacity'}>
-        {view === 'agenda' && <AgendaView events={displayEvents} custodyEvents={custodyEvents} startDate={new Date()} days={AGENDA_DAYS} onEventClick={setSelectedEvent} />}
+        {view === 'agenda' && <AgendaView events={displayEvents} custodyEvents={custodyEvents} startDate={getRange()[0]} days={AGENDA_DAYS} onEventClick={setSelectedEvent} />}
         {view === 'month' && <MonthView events={displayEvents} custodyEvents={custodyEvents} year={year} month={month} onEventClick={setSelectedEvent} onDayClick={goToDay} />}
         {view === 'week' && <WeekView events={displayEvents} custodyEvents={custodyEvents} weekStart={weekStart} onEventClick={setSelectedEvent} onSlotClick={goToDay} />}
         {view === 'day' && <DayView events={displayEvents} custodyEvents={custodyEvents} day={current} onEventClick={setSelectedEvent} onSlotClick={(d) => openCreateForm(d)} />}

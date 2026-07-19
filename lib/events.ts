@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { getToken } from './tokens';
 import { getAuthClient, isAuthError } from './google';
-import { getEnabledCalendars, getCustodyConfig, CalendarConfig } from './config';
+import { getEnabledCalendars, getCustodyConfig, getExcludedTitles, CalendarConfig } from './config';
 import { getAllTags, resolveTags, seriesId } from './tags';
 
 export type TaggedPerson = { displayName: string; color: string };
@@ -91,7 +91,16 @@ export async function fetchAllEvents(timeMin: Date, timeMax: Date): Promise<Even
       byId.set(event.id, event);
     }
   }
-  const deduped = [...byId.values()];
+  let deduped = [...byId.values()];
+
+  // Exclusion filter: needed on the source calendar for planning, unwanted here
+  const excluded = (await getExcludedTitles()).map((p) => p.toLowerCase());
+  if (excluded.length > 0) {
+    deduped = deduped.filter((e) => {
+      const title = e.title.toLowerCase();
+      return !excluded.some((phrase) => title.includes(phrase));
+    });
+  }
 
   const tagsMap = await getAllTags();
   const byKey = new Map(enabled.map((c) => [c.accountEmail + '::' + c.calendarId, c]));

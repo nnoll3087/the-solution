@@ -7,7 +7,13 @@ export type CalendarConfig = { accountEmail: string; calendarId: string; display
 export type CustodyRule = { match: string; label: string; color: string };
 export type CustodyConfig = { calendarKey: string; rules: CustodyRule[] };
 
-export type AppConfig = { calendars: CalendarConfig[]; custody?: CustodyConfig };
+export type AppConfig = {
+  calendars: CalendarConfig[];
+  custody?: CustodyConfig;
+  // Events whose title contains any of these phrases (case-insensitive) are
+  // dropped everywhere in the app — calendar views, queue, everything.
+  excludedTitles?: string[];
+};
 
 const DEFAULT_CONFIG: AppConfig = { calendars: [] };
 
@@ -34,6 +40,15 @@ export async function removeCalendarConfig(accountEmail: string, calendarId: str
 
 export async function getEnabledCalendars(): Promise<CalendarConfig[]> {
   return (await getConfig()).calendars.filter((c) => c.enabled);
+}
+
+export async function getExcludedTitles(): Promise<string[]> {
+  return (await getConfig()).excludedTitles ?? [];
+}
+
+export async function saveExcludedTitles(phrases: string[]) {
+  const config = await getConfig();
+  await saveConfig({ ...config, excludedTitles: phrases });
 }
 
 export async function getCustodyConfig(): Promise<CustodyConfig | null> {
