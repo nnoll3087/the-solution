@@ -62,7 +62,9 @@ export function ThemePrompt() {
 
       {open && (
         <>
-          <div onClick={() => setOpen(false)} className="fixed inset-0 z-40" />
+          {/* Dismiss on pointerdown, not click: touch taps on the on-screen keyboard
+              fire a trailing click that can land here after the tray hides */}
+          <div onPointerDown={() => setOpen(false)} className="fixed inset-0 z-40" />
           <div className="absolute right-0 top-full mt-2 w-80 bg-surface-elevated border border-border-themed rounded-lg shadow-2xl z-50 p-4">
             <label className="block text-xs uppercase tracking-wide text-text-muted mb-2">
               Describe a theme

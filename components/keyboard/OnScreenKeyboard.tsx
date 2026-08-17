@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { EditableField, insertText, deleteBack } from './typeIntoField';
 
 // Presentational on-screen keyboard. Stays mounted (for the slide transition)
@@ -64,7 +64,25 @@ export function OnScreenKeyboard({ field, onDone }: Props) {
   const [layer, setLayer] = useState<Layer>('letters');
   const [shift, setShift] = useState<Shift>('off');
   const lastShiftTap = useRef(0);
+  const trayRef = useRef<HTMLDivElement>(null);
+  const lastTrayPress = useRef(0);
   const open = field !== null;
+
+  // Even a prevented pointerdown still produces a trailing `click` on touch,
+  // dispatched after the finger lifts and hit-tested at that later moment. If
+  // the tray has hidden or moved by then (Done does exactly that), the click
+  // falls through to whatever is behind it. Swallow any click landing outside
+  // the tray within 400ms of a key press.
+  useEffect(() => {
+    function swallow(e: MouseEvent) {
+      if (Date.now() - lastTrayPress.current > 400) return;
+      if (trayRef.current && e.target instanceof Node && trayRef.current.contains(e.target)) return;
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    document.addEventListener('click', swallow, true);
+    return () => document.removeEventListener('click', swallow, true);
+  }, []);
 
   function pressChar(ch: string) {
     if (!field) return;
@@ -94,7 +112,11 @@ export function OnScreenKeyboard({ field, onDone }: Props) {
 
   return (
     <div
-      onPointerDown={(e) => e.preventDefault()}
+      ref={trayRef}
+      onPointerDown={(e) => {
+        lastTrayPress.current = Date.now();
+        e.preventDefault();
+      }}
       className={
         'fixed bottom-0 inset-x-0 z-[70] transition-transform duration-200 ease-out ' +
         (open ? 'translate-y-0' : 'translate-y-full pointer-events-none')

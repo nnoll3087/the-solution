@@ -268,7 +268,9 @@ export function EventFormPanel({ open, onClose, onSaved, initialStart, initialCa
 
   return (
     <>
-      <div onClick={onClose} className="fixed inset-0 bg-black/60 z-40" />
+      {/* Dismiss on pointerdown, not click: touch taps on the on-screen keyboard
+          fire a trailing click that can land here after the tray hides */}
+      <div onPointerDown={onClose} className="fixed inset-0 bg-black/60 z-40" />
       <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-surface-elevated border-l border-border-themed z-50 overflow-y-auto shadow-2xl">
         <div className="sticky top-0 bg-surface-elevated border-b border-border-themed px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-text">{isEdit ? 'Edit event' : 'New event'}</h2>

@@ -32,7 +32,9 @@ export function KeyboardProvider() {
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const id = requestAnimationFrame(() => {
+    // setTimeout, not requestAnimationFrame: rAF never fires while a tab is
+    // hidden, which would leave the keyboard disabled until something repaints
+    const id = setTimeout(() => {
       let forced = false;
       try {
         const param = new URLSearchParams(window.location.search).get('osk');
@@ -43,8 +45,8 @@ export function KeyboardProvider() {
       const coarse = window.matchMedia('(pointer: coarse)').matches;
       const wide = window.innerWidth >= 1024;
       setEnabled(forced || (coarse && wide));
-    });
-    return () => cancelAnimationFrame(id);
+    }, 0);
+    return () => clearTimeout(id);
   }, []);
 
   useEffect(() => {
