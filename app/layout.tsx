@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { Scene } from '@/components/scene/Scene';
+import { KeyboardProvider } from '@/components/keyboard/KeyboardProvider';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <Scene />
           {children}
+          <KeyboardProvider />
         </ThemeProvider>
       </body>
     </html>

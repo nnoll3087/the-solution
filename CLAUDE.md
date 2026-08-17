@@ -82,7 +82,9 @@ lib/
 `.env.local` exists (not read/logged by this doc or by Claude) with these variables in use:
 `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `NEXTAUTH_URL`,
 `TOKEN_ENCRYPTION_KEY`, `ANTHROPIC_API_KEY`. Production additionally uses `POSTGRES_URL`
-(storage backend switch), `FAMILY_PASSWORD`, and `AUTH_SECRET` (password auth).
+(storage backend switch), `FAMILY_PASSWORD`, `AUTH_SECRET` (password auth), and
+`BLOB_READ_WRITE_TOKEN` (Vercel Blob, photo-frame uploads — copy it into `.env.local` too so
+photo upload works in local dev; both environments hit the same Blob store).
 
 ## Auth (household password)
 
@@ -96,6 +98,20 @@ lib/
   stay signed in. Shared helpers in `lib/auth.ts` (Web Crypto only, so they run in both the proxy
   and route handlers).
 - One shared password for the household; there are no per-person accounts.
+- Vercel deployment protection should stay OFF in the dashboard — this in-app auth replaces it.
+
+## On-screen touch keyboard (kiosk)
+
+`components/keyboard/` — no third-party libs. `KeyboardProvider` is mounted once in
+`app/layout.tsx` (so it covers `/login` and every form) and listens for `focusin` on eligible
+fields (`textarea`, `input` of type text/password/email/search/url/number/tel). Auto-enables on
+coarse-pointer devices at >=1024px width (the kiosk; phones use their native keyboard) or force
+with `?osk=1` once (persists to localStorage `solution-osk`, `?osk=0` clears).
+`OnScreenKeyboard` slides from the bottom (200ms, z-70), QWERTY + symbols layers, single-shot
+shift with double-tap caps lock, 48px+ keys, theme tokens throughout. Typing goes through
+`typeIntoField.ts`, which writes via the native prototype value setter and dispatches a bubbling
+`input` event so React controlled inputs update — never set `.value` directly. Keyboard taps
+`preventDefault()` on pointerdown so focus stays in the field; Done blurs to dismiss.
 
 ## Calendars in use
 
@@ -137,6 +153,7 @@ The keys and their owning modules:
 | `queue-prefs` | `.queue-prefs.json` | `lib/queue.ts` | Per-person + default retention settings for queue entries |
 | `theme` | `.theme.json` | `lib/theme.ts` | The currently active theme spec |
 | `event-tags` | `.event-tags.json` | `lib/tags.ts` | Solution-only "also for" tags: eventId -> calendarKeys or `'family'`. Never written to Google. |
+| `photos` | `.photos.json` | `lib/photos.ts` | Photo-frame slideshow index (id, public Blob URL, filename, uploadedAt). Image bytes live in Vercel Blob (`BLOB_READ_WRITE_TOKEN`), compressed client-side to ~1MB before upload. |
 | `usage` | `.usage.json` | `lib/usage.ts` | Estimated Anthropic API spend from theme generations + user-entered credit balance countdown. The API exposes no balance endpoint, so the user syncs the number from console.anthropic.com; each generation's cost (from response `usage` tokens x Sonnet pricing) counts down from it. |
 
 Rules:
@@ -212,6 +229,12 @@ When adding themeable UI: add the color to `Colors` in `lib/theme.ts`, wire it t
   from event lists, and instead tint their days (month cell background, day-view banner, agenda
   chip, week column). Follows the person filter. Timed events never match by design.
 - Gear button in the home header links to `/setup`.
+- Photo-frame slideshow (`components/Slideshow.tsx`, home page only): after 15 idle minutes,
+  fades into fullscreen Ken Burns photos from Vercel Blob (20s per photo, 1.5s crossfade,
+  recency-weighted shuffle). Horizontal swipes go next/previous; any tap, key, or scroll exits.
+  Never activates with zero photos. Clock top-right; next-timed-event-in-12h ribbon at the
+  bottom. Upload/delete UI is the "Photo Frame" card on `/setup` (`components/PhotoManager.tsx`,
+  client-side compression via `browser-image-compression`); API is `/api/photos` + `lib/photos.ts`.
 - Person filter chips above the calendar (in `Calendar.tsx`): toggle any subset of people;
   "Family" chip resets to everyone. Events tagged "also for" a selected person show even when
   their home calendar is off; family-tagged events show under any selection. Selection persists
