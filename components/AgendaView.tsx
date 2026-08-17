@@ -46,7 +46,7 @@ export function AgendaView({ events, custodyEvents = [], startDate, days, onEven
   const visible = dayList.filter((d, i) => i === 0 || d.events.length > 0);
 
   return (
-    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-hidden divide-y divide-[var(--theme-border)]">
+    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-hidden lg:h-full lg:overflow-y-auto divide-y divide-[var(--theme-border)]">
       {visible.map(({ date, events: dayEvents, custody }) => {
         const isToday = date.toDateString() === today.toDateString();
         return (

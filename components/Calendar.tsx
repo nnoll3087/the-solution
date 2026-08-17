@@ -207,7 +207,7 @@ export function Calendar() {
   weekStart.setHours(0, 0, 0, 0);
 
   return (
-    <div>
+    <div className="flex flex-col lg:h-full lg:min-h-0">
       {authErrors.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3 px-4 py-3 rounded-lg border border-red-500/40 bg-red-500/10 text-sm text-text">
           <span>
@@ -285,7 +285,7 @@ export function Calendar() {
         </div>
       )}
 
-      <div className={loading ? 'opacity-50 transition-opacity' : 'transition-opacity'}>
+      <div className={'transition-opacity lg:flex-1 lg:min-h-0' + (loading ? ' opacity-50' : '')}>
         {view === 'agenda' && <AgendaView events={displayEvents} custodyEvents={custodyEvents} startDate={getRange()[0]} days={AGENDA_DAYS} onEventClick={setSelectedEvent} />}
         {view === 'month' && <MonthView events={displayEvents} custodyEvents={custodyEvents} year={year} month={month} onEventClick={setSelectedEvent} onDayClick={goToDay} />}
         {view === 'week' && <WeekView events={displayEvents} custodyEvents={custodyEvents} weekStart={weekStart} onEventClick={setSelectedEvent} onSlotClick={goToDay} />}

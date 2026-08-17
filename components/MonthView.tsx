@@ -48,13 +48,13 @@ export function MonthView({ events, custodyEvents = [], year, month, onEventClic
   }
 
   return (
-    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-hidden">
-      <div className="grid grid-cols-7 border-b border-border-themed">
+    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-hidden lg:h-full lg:flex lg:flex-col">
+      <div className="grid grid-cols-7 border-b border-border-themed lg:shrink-0">
         {DAY_LABELS.map((label) => (
           <div key={label} className="px-3 py-2 text-xs font-semibold text-text-muted uppercase tracking-wide text-center">{label}</div>
         ))}
       </div>
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-7 lg:flex-1 lg:auto-rows-fr lg:min-h-0">
         {cells.map((day, idx) => {
           const isToday = isCurrentMonth && day === todayDate;
           const dayEvents = day ? eventsForDay(day) : [];
@@ -63,7 +63,7 @@ export function MonthView({ events, custodyEvents = [], year, month, onEventClic
             <div
               key={idx}
               onClick={day ? () => handleDayClick(day) : undefined}
-              className={'min-h-[92px] sm:min-h-[112px] border-b border-r border-border-themed p-0.5 sm:p-1.5 ' + (day ? 'cursor-pointer hover:brightness-110 transition ' + (custody ? '' : 'bg-bg/60') : 'bg-surface/30')}
+              className={'min-h-[92px] sm:min-h-[112px] lg:min-h-0 overflow-hidden border-b border-r border-border-themed p-0.5 sm:p-1.5 ' + (day ? 'cursor-pointer hover:brightness-110 transition ' + (custody ? '' : 'bg-bg/60') : 'bg-surface/30')}
               style={custody ? { backgroundColor: custody.color + '2e' } : undefined}
               title={custody?.label}
             >
@@ -94,7 +94,7 @@ export function MonthView({ events, custodyEvents = [], year, month, onEventClic
                       <button
                         key={event.id + '-' + i}
                         onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(event); }}
-                        className="flex w-full items-center gap-1 text-left text-xs rounded px-1 py-px text-text hover:brightness-110 transition"
+                        className="flex w-full items-center gap-1 text-left text-xs lg:text-sm rounded px-1 py-px text-text hover:brightness-110 transition"
                         style={{ backgroundColor: event.color + '30', borderLeft: '3px solid ' + event.color }}
                       >
                         <span className="truncate flex-1 leading-5">{event.title}</span>
@@ -102,7 +102,7 @@ export function MonthView({ events, custodyEvents = [], year, month, onEventClic
                       </button>
                     ))}
                     {dayEvents.length > 5 && (
-                      <div className="text-xs text-text-subtle px-1">+{dayEvents.length - 5} more</div>
+                      <div className="text-xs lg:text-sm text-text-subtle px-1">+{dayEvents.length - 5} more</div>
                     )}
                   </div>
                 </>

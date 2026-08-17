@@ -6,8 +6,8 @@ import { ZenMode } from '@/components/ZenMode';
 export default function Home() {
   return (
     <ZenMode>
-      <main className="min-h-screen p-3 sm:p-5 relative">
-        <header className="mb-3 flex items-center justify-between gap-3">
+      <main className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col p-3 sm:p-5 relative">
+        <header className="mb-3 shrink-0 flex items-center justify-between gap-3">
           <h1 className="text-xl sm:text-2xl font-bold text-text">The Solution®</h1>
           <div className="flex items-center gap-2">
             <ThemePrompt />
@@ -20,7 +20,7 @@ export default function Home() {
             </a>
           </div>
         </header>
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] lg:grid-rows-[minmax(0,1fr)] gap-4 lg:flex-1 lg:min-h-0">
           <Calendar />
           <QueuePreview />
         </div>

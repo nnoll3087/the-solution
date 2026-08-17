@@ -50,7 +50,7 @@ export function QueuePreview() {
   const people = Object.keys(byPerson).sort();
 
   return (
-    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed p-4">
+    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed p-4 lg:h-full lg:overflow-y-auto">
       <div className="flex items-baseline justify-between mb-3">
         <h2 className="text-lg font-semibold text-text">What&apos;s new</h2>
         <a href="/queue" className="text-xs text-accent hover:brightness-125">

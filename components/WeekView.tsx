@@ -111,9 +111,9 @@ export function WeekView({ events, custodyEvents = [], weekStart, onEventClick, 
   }
 
   return (
-    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-x-auto">
-      <div className="min-w-[640px]">
-      <div className="grid grid-cols-8 border-b border-border-themed">
+    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-x-auto lg:h-full lg:flex lg:flex-col">
+      <div className="min-w-[640px] lg:flex lg:flex-col lg:flex-1 lg:min-h-0">
+      <div className="grid grid-cols-8 border-b border-border-themed lg:shrink-0">
         <div className="px-2 py-2 text-xs text-text-subtle"></div>
         {days.map((d, i) => {
           const isToday = isSameDay(d, today);
@@ -131,7 +131,7 @@ export function WeekView({ events, custodyEvents = [], weekStart, onEventClick, 
           );
         })}
       </div>
-      <div className="grid grid-cols-8 max-h-[70vh] overflow-y-auto">
+      <div className="grid grid-cols-8 max-h-[70vh] lg:max-h-none lg:flex-1 lg:min-h-0 overflow-y-auto">
         <div>
           {HOURS.map((h) => (
             <div key={h} className="h-16 border-b border-border-themed px-2 py-1 text-xs text-text-subtle text-right">{formatHour(h)}</div>
@@ -159,7 +159,7 @@ export function WeekView({ events, custodyEvents = [], weekStart, onEventClick, 
                 <button
                   key={di + '-allday-' + i + '-' + event.id}
                   onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(event); }}
-                  className="absolute left-1 right-1 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-left text-text hover:brightness-110 transition"
+                  className="absolute left-1 right-1 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs lg:text-sm text-left text-text hover:brightness-110 transition"
                   style={{ top: i * 20 + 'px', backgroundColor: event.color + '30', borderLeft: '3px solid ' + event.color }}
                 >
                   <span className="truncate flex-1">{event.title}</span>
@@ -170,7 +170,7 @@ export function WeekView({ events, custodyEvents = [], weekStart, onEventClick, 
                 <button
                   key={di + '-timed-' + i + '-' + p.event.id}
                   onClick={(e) => { e.stopPropagation(); onEventClick && onEventClick(p.event); }}
-                  className="absolute rounded px-1 py-0.5 text-xs text-left text-text hover:brightness-110 transition overflow-hidden"
+                  className="absolute rounded px-1 py-0.5 text-xs lg:text-sm text-left text-text hover:brightness-110 transition overflow-hidden"
                   style={{
                     top: p.top + 'px',
                     height: p.height + 'px',

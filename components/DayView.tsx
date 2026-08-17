@@ -117,7 +117,7 @@ export function DayView({ events, custodyEvents = [], day, onEventClick, onSlotC
   const positioned = layoutTimedEvents(dayEvents, rangeStart);
 
   return (
-    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-hidden">
+    <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-hidden lg:h-full lg:flex lg:flex-col">
       <div className="px-4 py-3 border-b border-border-themed flex items-baseline gap-3">
         <div className={'text-3xl font-bold ' + (isToday ? 'text-accent' : 'text-text')}>{day.getDate()}</div>
         <div className="text-lg text-text-muted">{DAY_LABELS[day.getDay()]}, {day.toLocaleString('default', { month: 'long' })}</div>
@@ -146,7 +146,7 @@ export function DayView({ events, custodyEvents = [], day, onEventClick, onSlotC
           ))}
         </div>
       )}
-      <div className="grid grid-cols-[64px_1fr] sm:grid-cols-[80px_1fr]">
+      <div className="grid grid-cols-[64px_1fr] sm:grid-cols-[80px_1fr] lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
         <div>
           {hours.map((h) => (
             <div key={h} className="h-10 border-b border-border-themed px-2 py-0.5 text-xs text-text-subtle text-right">{formatHour(h)}</div>
