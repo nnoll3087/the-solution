@@ -44,3 +44,16 @@ html, body {
 input, select, textarea, button {
   accent-color: var(--theme-accent);
 }
+
+/* Photo slideshow Ken Burns pans. Base scale covers the translate so edges
+   never show; duration outlasts the 20s per-photo hold plus the crossfade. */
+@keyframes kenburns-a {
+  from { transform: scale(1.06) translate(1.2%, 0.8%); }
+  to   { transform: scale(1.14) translate(-1.2%, -0.8%); }
+}
+@keyframes kenburns-b {
+  from { transform: scale(1.06) translate(-1.2%, -0.8%); }
+  to   { transform: scale(1.14) translate(1.2%, 0.8%); }
+}
+.kenburns-a { animation: kenburns-a 26s ease-in-out forwards; }
+.kenburns-b { animation: kenburns-b 26s ease-in-out forwards; }

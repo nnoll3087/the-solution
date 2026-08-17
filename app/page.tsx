@@ -2,9 +2,11 @@ import { Calendar } from '@/components/Calendar';
 import { QueuePreview } from '@/components/QueuePreview';
 import { ThemePrompt } from '@/components/ThemePrompt';
 import { ZenMode } from '@/components/ZenMode';
+import { Slideshow } from '@/components/Slideshow';
 
 export default function Home() {
   return (
+    <>
     <ZenMode>
       <main className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col p-3 sm:p-5 relative">
         <header className="mb-3 shrink-0 flex items-center justify-between gap-3">
@@ -26,5 +28,8 @@ export default function Home() {
         </div>
       </main>
     </ZenMode>
+    {/* Idle photo frame: home page only, per the kiosk requirement */}
+    <Slideshow />
+    </>
   );
 }
