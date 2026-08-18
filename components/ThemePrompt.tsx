@@ -65,7 +65,7 @@ export function ThemePrompt() {
           {/* Dismiss on pointerdown, not click: touch taps on the on-screen keyboard
               fire a trailing click that can land here after the tray hides */}
           <div onPointerDown={() => setOpen(false)} className="fixed inset-0 z-40" />
-          <div className="absolute right-0 top-full mt-2 w-80 bg-surface-elevated border border-border-themed rounded-lg shadow-2xl z-50 p-4">
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-2rem)] max-w-sm max-h-[85vh] overflow-y-auto sm:absolute sm:left-auto sm:top-full sm:right-0 sm:translate-x-0 sm:translate-y-0 sm:mt-2 sm:w-80 sm:max-w-none sm:max-h-none sm:overflow-visible bg-surface-elevated border border-border-themed rounded-lg shadow-2xl z-50 p-4">
             <label className="block text-xs uppercase tracking-wide text-text-muted mb-2">
               Describe a theme
             </label>
