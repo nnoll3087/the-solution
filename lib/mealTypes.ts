@@ -14,7 +14,14 @@ export function isMealType(value: unknown): value is MealType {
 
 // Client-safe (no server imports) so components can use this shape and the
 // grouping helper below without pulling in lib/mealPlan.ts's fs/pg deps.
-export type JoinedMealPlanEntry = { recipeId: string; mealType: MealType; title: string; emoji: string };
+export type JoinedMealPlanEntry = {
+  recipeId: string;
+  mealType: MealType;
+  title: string;
+  emoji: string;
+  kidsRating?: number;
+  parentsRating?: number;
+};
 
 // Groups the flat `date:mealType` -> entry map (as returned by GET
 // /api/meal-plan) into per-date arrays for calendar rendering.

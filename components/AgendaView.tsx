@@ -12,6 +12,7 @@ type Props = {
   startDate: Date;
   days: number;
   onEventClick?: (event: NormalizedEvent) => void;
+  onMealClick?: (meal: JoinedMealPlanEntry) => void;
 };
 
 function dayLabel(d: Date, today: Date): string {
@@ -25,7 +26,7 @@ function fmtTime(iso: string): string {
   return new Date(iso).toLocaleString('default', { hour: 'numeric', minute: '2-digit' });
 }
 
-export function AgendaView({ events, custodyEvents = [], mealsByDate = {}, startDate, days, onEventClick }: Props) {
+export function AgendaView({ events, custodyEvents = [], mealsByDate = {}, startDate, days, onEventClick, onMealClick }: Props) {
   const today = new Date();
 
   const dayList: {
@@ -76,13 +77,14 @@ export function AgendaView({ events, custodyEvents = [], mealsByDate = {}, start
                 </span>
               )}
               {meals.map((meal) => (
-                <span
+                <button
                   key={meal.mealType}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full bg-accent/15 text-accent"
+                  onClick={() => onMealClick && onMealClick(meal)}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full bg-accent/15 text-accent hover:brightness-110 transition"
                 >
                   <span>{meal.emoji}</span>
                   {MEAL_TYPE_LABELS[meal.mealType]}: {meal.title}
-                </span>
+                </button>
               ))}
             </div>
             {dayEvents.length === 0 ? (

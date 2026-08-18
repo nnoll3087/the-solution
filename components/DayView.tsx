@@ -12,6 +12,7 @@ type Props = {
   day: Date;
   onEventClick?: (event: NormalizedEvent) => void;
   onSlotClick?: (date: Date) => void;
+  onMealClick?: (meal: JoinedMealPlanEntry) => void;
 };
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -75,7 +76,7 @@ function layoutTimedEvents(events: NormalizedEvent[], rangeStart: number): Posit
   return positioned;
 }
 
-export function DayView({ events, custodyEvents = [], mealsByDate = {}, day, onEventClick, onSlotClick }: Props) {
+export function DayView({ events, custodyEvents = [], mealsByDate = {}, day, onEventClick, onSlotClick, onMealClick }: Props) {
   const today = new Date();
   const isToday = today.toDateString() === day.toDateString();
 
@@ -137,13 +138,14 @@ export function DayView({ events, custodyEvents = [], mealsByDate = {}, day, onE
       {dayMeals.length > 0 && (
         <div className="px-4 py-2 border-b border-border-themed flex flex-wrap gap-2">
           {dayMeals.map((meal) => (
-            <span
+            <button
               key={meal.mealType}
-              className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 text-accent px-3 py-1 text-sm font-medium"
+              onClick={() => onMealClick && onMealClick(meal)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 text-accent px-3 py-1 text-sm font-medium hover:brightness-110 transition"
             >
               <span>{meal.emoji}</span>
               {MEAL_TYPE_LABELS[meal.mealType]}: {meal.title}
-            </span>
+            </button>
           ))}
         </div>
       )}

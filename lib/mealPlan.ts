@@ -28,7 +28,14 @@ export async function getJoinedMealPlan(): Promise<Record<string, JoinedMealPlan
   for (const [k, entry] of Object.entries(plan)) {
     const recipe = recipes[entry.recipeId];
     if (!recipe) continue;
-    joined[k] = { recipeId: entry.recipeId, mealType: entry.mealType, title: recipe.title, emoji: recipe.emoji };
+    joined[k] = {
+      recipeId: entry.recipeId,
+      mealType: entry.mealType,
+      title: recipe.title,
+      emoji: recipe.emoji,
+      kidsRating: recipe.kidsRating,
+      parentsRating: recipe.parentsRating,
+    };
   }
   return joined;
 }

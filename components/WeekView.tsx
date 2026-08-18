@@ -12,6 +12,7 @@ type Props = {
   weekStart: Date;
   onEventClick?: (event: NormalizedEvent) => void;
   onSlotClick?: (date: Date) => void;
+  onMealClick?: (meal: JoinedMealPlanEntry) => void;
 };
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -75,7 +76,7 @@ function layoutTimedEvents(events: NormalizedEvent[]): PositionedEvent[] {
   return positioned;
 }
 
-export function WeekView({ events, custodyEvents = [], mealsByDate = {}, weekStart, onEventClick, onSlotClick }: Props) {
+export function WeekView({ events, custodyEvents = [], mealsByDate = {}, weekStart, onEventClick, onSlotClick, onMealClick }: Props) {
   function custodyForDay(day: Date) {
     const dayStart = new Date(day).setHours(0, 0, 0, 0);
     const dayEnd = new Date(day).setHours(23, 59, 59, 999);
@@ -134,8 +135,17 @@ export function WeekView({ events, custodyEvents = [], mealsByDate = {}, weekSta
               <div className="text-xs text-text-muted uppercase tracking-wide">{DAY_LABELS[d.getDay()]}</div>
               <div className={'text-lg font-semibold ' + (isToday ? 'text-accent' : 'text-text')}>{d.getDate()}</div>
               {dayMeals.length > 0 && (
-                <div className="text-xs text-text-subtle truncate" title={dayMeals.map((m) => m.title).join(', ')}>
-                  {dayMeals.map((m) => m.emoji).join(' ')}
+                <div className="flex items-center justify-center gap-0.5">
+                  {dayMeals.map((m) => (
+                    <button
+                      key={m.mealType}
+                      onClick={() => onMealClick && onMealClick(m)}
+                      title={m.title}
+                      className="text-xs hover:brightness-125 transition"
+                    >
+                      {m.emoji}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>

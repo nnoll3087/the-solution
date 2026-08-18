@@ -7,6 +7,7 @@ import { DayView } from './DayView';
 import { AgendaView } from './AgendaView';
 import { EventModal } from './EventModal';
 import { EventFormPanel } from './EventFormPanel';
+import { MealRatingPopup } from './MealRatingPopup';
 import { NormalizedEvent } from '@/lib/events';
 import { JoinedMealPlanEntry, groupMealsByDate } from '@/lib/mealTypes';
 
@@ -30,6 +31,18 @@ export function Calendar({ initialMealsVisible }: { initialMealsVisible: boolean
   const [selectedKeys, setSelectedKeys] = useState<Set<string> | null>(null);
   const [mealsVisible, setMealsVisible] = useState(initialMealsVisible);
   const [mealsByDate, setMealsByDate] = useState<Record<string, JoinedMealPlanEntry[]>>({});
+  const [ratingMeal, setRatingMeal] = useState<JoinedMealPlanEntry | null>(null);
+
+  function handleMealRated(recipeId: string, patch: { kidsRating?: number; parentsRating?: number }) {
+    setMealsByDate((prev) => {
+      const next: typeof prev = {};
+      for (const [date, meals] of Object.entries(prev)) {
+        next[date] = meals.map((m) => (m.recipeId === recipeId ? { ...m, ...patch } : m));
+      }
+      return next;
+    });
+    setRatingMeal((prev) => (prev && prev.recipeId === recipeId ? { ...prev, ...patch } : prev));
+  }
 
   function toggleMealsVisible() {
     const next = !mealsVisible;
@@ -322,10 +335,10 @@ export function Calendar({ initialMealsVisible }: { initialMealsVisible: boolean
       )}
 
       <div className={'transition-opacity lg:flex-1 lg:min-h-0' + (loading ? ' opacity-50' : '')}>
-        {view === 'agenda' && <AgendaView events={displayEvents} custodyEvents={custodyEvents} mealsByDate={mealsByDate} startDate={getRange()[0]} days={AGENDA_DAYS} onEventClick={setSelectedEvent} />}
+        {view === 'agenda' && <AgendaView events={displayEvents} custodyEvents={custodyEvents} mealsByDate={mealsByDate} startDate={getRange()[0]} days={AGENDA_DAYS} onEventClick={setSelectedEvent} onMealClick={setRatingMeal} />}
         {view === 'month' && <MonthView events={displayEvents} custodyEvents={custodyEvents} mealsByDate={mealsByDate} year={year} month={month} onEventClick={setSelectedEvent} onDayClick={goToDay} />}
-        {view === 'week' && <WeekView events={displayEvents} custodyEvents={custodyEvents} mealsByDate={mealsByDate} weekStart={weekStart} onEventClick={setSelectedEvent} onSlotClick={goToDay} />}
-        {view === 'day' && <DayView events={displayEvents} custodyEvents={custodyEvents} mealsByDate={mealsByDate} day={current} onEventClick={setSelectedEvent} onSlotClick={(d) => openCreateForm(d)} />}
+        {view === 'week' && <WeekView events={displayEvents} custodyEvents={custodyEvents} mealsByDate={mealsByDate} weekStart={weekStart} onEventClick={setSelectedEvent} onSlotClick={goToDay} onMealClick={setRatingMeal} />}
+        {view === 'day' && <DayView events={displayEvents} custodyEvents={custodyEvents} mealsByDate={mealsByDate} day={current} onEventClick={setSelectedEvent} onSlotClick={(d) => openCreateForm(d)} onMealClick={setRatingMeal} />}
       </div>
       <EventModal
         event={selectedEvent}
@@ -340,6 +353,7 @@ export function Calendar({ initialMealsVisible }: { initialMealsVisible: boolean
         initialStart={formInitialStart}
         existingEvent={formEditing}
       />
+      <MealRatingPopup meal={ratingMeal} onClose={() => setRatingMeal(null)} onRated={handleMealRated} />
     </div>
   );
 }
