@@ -8,6 +8,7 @@ import { AgendaView } from './AgendaView';
 import { EventModal } from './EventModal';
 import { EventFormPanel } from './EventFormPanel';
 import { NormalizedEvent } from '@/lib/events';
+import { JoinedMealPlanEntry, groupMealsByDate } from '@/lib/mealTypes';
 
 type ViewMode = 'agenda' | 'day' | 'week' | 'month';
 
@@ -21,12 +22,13 @@ type CalendarOption = {
 const AGENDA_DAYS = 14;
 const FILTER_STORAGE_KEY = 'solution-person-filter';
 
-export function Calendar() {
+export function Calendar({ mealsVisible }: { mealsVisible: boolean }) {
   const [current, setCurrent] = useState<Date>(new Date());
   const [view, setView] = useState<ViewMode>('month');
   const [calendars, setCalendars] = useState<CalendarOption[]>([]);
   // null = everyone (no filter applied yet / Family)
   const [selectedKeys, setSelectedKeys] = useState<Set<string> | null>(null);
+  const [mealsByDate, setMealsByDate] = useState<Record<string, JoinedMealPlanEntry[]>>({});
 
   // Phones default to the agenda; set after mount to avoid a hydration mismatch
   useEffect(() => {
@@ -43,6 +45,17 @@ export function Calendar() {
       if (saved) setSelectedKeys(new Set(JSON.parse(saved)));
     } catch {}
   }, []);
+
+  useEffect(() => {
+    if (!mealsVisible) {
+      setMealsByDate({});
+      return;
+    }
+    fetch('/api/meal-plan')
+      .then((r) => r.json())
+      .then((data) => setMealsByDate(groupMealsByDate(data.plan || {})))
+      .catch(() => {});
+  }, [mealsVisible]);
 
   function persistSelection(keys: Set<string> | null) {
     setSelectedKeys(keys);
@@ -286,10 +299,10 @@ export function Calendar() {
       )}
 
       <div className={'transition-opacity lg:flex-1 lg:min-h-0' + (loading ? ' opacity-50' : '')}>
-        {view === 'agenda' && <AgendaView events={displayEvents} custodyEvents={custodyEvents} startDate={getRange()[0]} days={AGENDA_DAYS} onEventClick={setSelectedEvent} />}
-        {view === 'month' && <MonthView events={displayEvents} custodyEvents={custodyEvents} year={year} month={month} onEventClick={setSelectedEvent} onDayClick={goToDay} />}
-        {view === 'week' && <WeekView events={displayEvents} custodyEvents={custodyEvents} weekStart={weekStart} onEventClick={setSelectedEvent} onSlotClick={goToDay} />}
-        {view === 'day' && <DayView events={displayEvents} custodyEvents={custodyEvents} day={current} onEventClick={setSelectedEvent} onSlotClick={(d) => openCreateForm(d)} />}
+        {view === 'agenda' && <AgendaView events={displayEvents} custodyEvents={custodyEvents} mealsByDate={mealsByDate} startDate={getRange()[0]} days={AGENDA_DAYS} onEventClick={setSelectedEvent} />}
+        {view === 'month' && <MonthView events={displayEvents} custodyEvents={custodyEvents} mealsByDate={mealsByDate} year={year} month={month} onEventClick={setSelectedEvent} onDayClick={goToDay} />}
+        {view === 'week' && <WeekView events={displayEvents} custodyEvents={custodyEvents} mealsByDate={mealsByDate} weekStart={weekStart} onEventClick={setSelectedEvent} onSlotClick={goToDay} />}
+        {view === 'day' && <DayView events={displayEvents} custodyEvents={custodyEvents} mealsByDate={mealsByDate} day={current} onEventClick={setSelectedEvent} onSlotClick={(d) => openCreateForm(d)} />}
       </div>
       <EventModal
         event={selectedEvent}

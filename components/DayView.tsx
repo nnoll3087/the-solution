@@ -1,12 +1,14 @@
 'use client';
 
 import { NormalizedEvent } from '@/lib/events';
-import { eventOnDay } from '@/lib/dates';
+import { eventOnDay, toDateKey } from '@/lib/dates';
+import { JoinedMealPlanEntry, MEAL_TYPE_LABELS } from '@/lib/mealTypes';
 import { TagDots } from './TagDots';
 
 type Props = {
   events: NormalizedEvent[];
   custodyEvents?: NormalizedEvent[];
+  mealsByDate?: Record<string, JoinedMealPlanEntry[]>;
   day: Date;
   onEventClick?: (event: NormalizedEvent) => void;
   onSlotClick?: (date: Date) => void;
@@ -73,7 +75,7 @@ function layoutTimedEvents(events: NormalizedEvent[], rangeStart: number): Posit
   return positioned;
 }
 
-export function DayView({ events, custodyEvents = [], day, onEventClick, onSlotClick }: Props) {
+export function DayView({ events, custodyEvents = [], mealsByDate = {}, day, onEventClick, onSlotClick }: Props) {
   const today = new Date();
   const isToday = today.toDateString() === day.toDateString();
 
@@ -102,6 +104,7 @@ export function DayView({ events, custodyEvents = [], day, onEventClick, onSlotC
   const dayStartMs = new Date(day).setHours(0, 0, 0, 0);
   const dayEndMs = new Date(day).setHours(23, 59, 59, 999);
   const custody = custodyEvents.find((e) => eventOnDay(e, dayStartMs, dayEndMs))?.custody;
+  const dayMeals = mealsByDate[toDateKey(day)] || [];
 
   // Show 8am-9pm by default, stretching to cover any events outside that window
   let rangeStart = 8;
@@ -129,6 +132,19 @@ export function DayView({ events, custodyEvents = [], day, onEventClick, onSlotC
         >
           <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: custody.color }} />
           {custody.label}
+        </div>
+      )}
+      {dayMeals.length > 0 && (
+        <div className="px-4 py-2 border-b border-border-themed flex flex-wrap gap-2">
+          {dayMeals.map((meal) => (
+            <span
+              key={meal.mealType}
+              className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 text-accent px-3 py-1 text-sm font-medium"
+            >
+              <span>{meal.emoji}</span>
+              {MEAL_TYPE_LABELS[meal.mealType]}: {meal.title}
+            </span>
+          ))}
         </div>
       )}
       {allDayEvents.length > 0 && (

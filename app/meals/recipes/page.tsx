@@ -14,8 +14,8 @@ export default async function RecipeLibraryPage() {
         >
           ← Meal Planner
         </Link>
-        <h1 className="text-3xl sm:text-4xl font-bold mb-2">Recipe Library</h1>
-        <p className="text-text-muted mb-8">Every recipe you&apos;ve saved. Search, edit, or add a new one.</p>
+        <h1 className="text-3xl sm:text-4xl font-bold mb-2">All Meals</h1>
+        <p className="text-text-muted mb-8">Every meal anyone&apos;s typed in. Edit the details or remove one for good.</p>
         <RecipeLibrary initialRecipes={recipes} />
       </div>
     </main>

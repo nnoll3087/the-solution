@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 // Photo-frame screensaver: after IDLE_MS without interaction on the home page,
 // fades into a fullscreen Ken Burns slideshow of the family photos in Blob.
@@ -61,7 +61,9 @@ function Layer({ slide, fadingIn }: { slide: Slide; fadingIn: boolean }) {
   );
 }
 
-export function Slideshow() {
+export type SlideshowHandle = { activate: () => void };
+
+export const Slideshow = forwardRef<SlideshowHandle, { hideTrigger?: boolean }>(function Slideshow({ hideTrigger }, ref) {
   const [active, setActive] = useState(false);
   const [visible, setVisible] = useState(false);
   const [current, setCurrent] = useState<Slide | null>(null);
@@ -80,6 +82,8 @@ export function Slideshow() {
   const currentRef = useRef<Slide | null>(null);
   const exitingRef = useRef(false);
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
+
+  useImperativeHandle(ref, () => ({ activate: () => tryActivate() }));
 
   function reshuffleForward() {
     const lastShown = orderRef.current[orderRef.current.length - 1];
@@ -240,9 +244,9 @@ export function Slideshow() {
     }
   }, [current]);
 
-  // Manual entry: same look/placement as Zen mode's ✨ button, sitting to its
-  // left. Uses the same activation path, so it quietly no-ops with zero photos.
+  // Manual entry: quietly no-ops with zero photos via the same activation path.
   if (!active) {
+    if (hideTrigger) return null;
     return (
       <button
         onClick={tryActivate}
@@ -309,4 +313,4 @@ export function Slideshow() {
       )}
     </div>
   );
-}
+});

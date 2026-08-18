@@ -15,6 +15,7 @@ export type AppConfig = {
   excludedTitles?: string[];
   // Shared display toggles (kiosk + phones agree on what's showing), not
   // per-device localStorage.
+  // Whether planned meals render on the day/week/month calendar views.
   mealsVisible?: boolean;
   photoFrameEnabled?: boolean;
 };
@@ -64,8 +65,8 @@ export async function saveCustodyConfig(custody: CustodyConfig | null) {
   await saveConfig({ ...config, custody: custody ?? undefined });
 }
 
-// Defaults to visible: the meals header entry has always shown since it was
-// introduced, so an unset flag should not silently hide it.
+// Defaults to visible: an unset flag should not silently hide planned meals
+// from the calendar.
 export async function getMealsVisible(): Promise<boolean> {
   return (await getConfig()).mealsVisible ?? true;
 }

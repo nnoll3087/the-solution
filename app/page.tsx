@@ -1,39 +1,7 @@
-import { Calendar } from '@/components/Calendar';
-import { QueuePreview } from '@/components/QueuePreview';
-import { ThemePrompt } from '@/components/ThemePrompt';
-import { ZenMode } from '@/components/ZenMode';
-import { Slideshow } from '@/components/Slideshow';
-import { MealsMenu } from '@/components/MealsMenu';
+import { HomeShell } from '@/components/HomeShell';
 import { getMealsVisible } from '@/lib/config';
 
 export default async function Home() {
   const mealsVisible = await getMealsVisible();
-  return (
-    <>
-    <ZenMode>
-      <main className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col p-3 sm:p-5 relative">
-        <header className="mb-3 shrink-0 flex items-center justify-between gap-3">
-          <h1 className="text-xl sm:text-2xl font-bold text-text">The Solution®</h1>
-          <div className="flex items-center gap-2">
-            {mealsVisible && <MealsMenu />}
-            <ThemePrompt />
-            <a
-              href="/setup"
-              title="Settings"
-              className="w-10 h-10 flex items-center justify-center rounded-lg bg-surface/80 backdrop-blur hover:bg-surface-elevated border border-border-themed text-text-muted hover:text-text transition"
-            >
-              ⚙️
-            </a>
-          </div>
-        </header>
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] lg:grid-rows-[minmax(0,1fr)] gap-4 lg:flex-1 lg:min-h-0">
-          <Calendar />
-          <QueuePreview />
-        </div>
-      </main>
-    </ZenMode>
-    {/* Idle photo frame: home page only, per the kiosk requirement */}
-    <Slideshow />
-    </>
-  );
+  return <HomeShell mealsVisible={mealsVisible} />;
 }

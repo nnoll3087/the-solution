@@ -1,12 +1,14 @@
 'use client';
 
 import { NormalizedEvent } from '@/lib/events';
-import { eventOnDay } from '@/lib/dates';
+import { eventOnDay, toDateKey } from '@/lib/dates';
+import { JoinedMealPlanEntry } from '@/lib/mealTypes';
 import { TagDots } from './TagDots';
 
 type Props = {
   events: NormalizedEvent[];
   custodyEvents?: NormalizedEvent[];
+  mealsByDate?: Record<string, JoinedMealPlanEntry[]>;
   year: number;
   month: number;
   onEventClick?: (event: NormalizedEvent) => void;
@@ -15,7 +17,7 @@ type Props = {
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export function MonthView({ events, custodyEvents = [], year, month, onEventClick, onDayClick }: Props) {
+export function MonthView({ events, custodyEvents = [], mealsByDate = {}, year, month, onEventClick, onDayClick }: Props) {
   const firstOfMonth = new Date(year, month, 1);
   const startDayOfWeek = firstOfMonth.getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -40,6 +42,10 @@ export function MonthView({ events, custodyEvents = [], year, month, onEventClic
     return custodyEvents.find((e) => eventOnDay(e, dayStart, dayEnd))?.custody;
   }
 
+  function mealsForDay(day: number): JoinedMealPlanEntry[] {
+    return mealsByDate[toDateKey(new Date(year, month, day))] || [];
+  }
+
   function handleDayClick(day: number) {
     if (!onDayClick) return;
     const d = new Date(year, month, day);
@@ -59,6 +65,7 @@ export function MonthView({ events, custodyEvents = [], year, month, onEventClic
           const isToday = isCurrentMonth && day === todayDate;
           const dayEvents = day ? eventsForDay(day) : [];
           const custody = day ? custodyForDay(day) : undefined;
+          const dayMeals = day ? mealsForDay(day) : [];
           return (
             <div
               key={idx}
@@ -69,10 +76,15 @@ export function MonthView({ events, custodyEvents = [], year, month, onEventClic
             >
               {day && (
                 <>
-                  <div className={'text-sm font-medium mb-0.5 text-center sm:text-left ' + (isToday ? 'text-accent' : 'text-text-muted')}>
+                  <div className={'text-sm font-medium mb-0.5 flex items-center justify-center sm:justify-between gap-1 ' + (isToday ? 'text-accent' : 'text-text-muted')}>
                     {isToday ? (
                       <span className="inline-flex items-center justify-center w-6 h-6 bg-accent text-white rounded-full text-xs">{day}</span>
                     ) : (day)}
+                    {dayMeals.length > 0 && (
+                      <span className="hidden sm:inline text-xs" title={dayMeals.map((m) => m.title).join(', ')}>
+                        {dayMeals.map((m) => m.emoji).join('')}
+                      </span>
+                    )}
                   </div>
                   {/* Phones: mini chips with truncated titles; tap the day for the full list */}
                   <div className="sm:hidden space-y-px">

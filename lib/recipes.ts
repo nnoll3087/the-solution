@@ -1,4 +1,5 @@
 import { readStore, writeStore } from './storage';
+import { MealType } from './mealTypes';
 
 export type Ingredient = { name: string; quantity?: string; unit?: string };
 
@@ -6,10 +7,14 @@ export type Recipe = {
   id: string;
   title: string;
   emoji: string;
+  mealTypes: MealType[];
   notes?: string;
   ingredients?: Ingredient[];
   url?: string;
   sourceLabel?: string;
+  photoUrl?: string;
+  kidsRating?: number;
+  parentsRating?: number;
   createdAt: string;
   updatedAt: string;
 };

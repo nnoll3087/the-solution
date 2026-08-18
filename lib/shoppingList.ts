@@ -1,7 +1,8 @@
 import { readStore, writeStore } from './storage';
-import { getMealPlan } from './mealPlan';
+import { getMealPlan, mealsForDate } from './mealPlan';
 import { getRecipesByIds } from './recipes';
 import { toDateKey } from './dates';
+import { MEAL_TYPES } from './mealTypes';
 
 export type ExtraItem = { id: string; text: string; checked: boolean };
 type WeekState = { checkedIngredients: string[]; extraItems: ExtraItem[] };
@@ -44,22 +45,29 @@ export async function getShoppingList(
   const [plan, state] = await Promise.all([getMealPlan(), getWeekState(weekStart)]);
 
   const dates = weekDateKeys(weekStart);
-  const recipeIds = Array.from(new Set(dates.map((d) => plan[d]?.recipeId).filter((id): id is string => !!id)));
+  const entriesByDate = dates.map((date) => mealsForDate(plan, date));
+  const recipeIds = Array.from(
+    new Set(
+      entriesByDate.flatMap((slots) => MEAL_TYPES.map((mt) => slots[mt]?.recipeId).filter((id): id is string => !!id))
+    )
+  );
   const recipes = await getRecipesByIds(recipeIds);
 
   const groups = new Map<string, { name: string; parts: string[] }>();
-  for (const date of dates) {
-    const entry = plan[date];
-    const recipe = entry && recipes[entry.recipeId];
-    if (!recipe?.ingredients) continue;
-    for (const ing of recipe.ingredients) {
-      const key = ing.name.trim().toLowerCase();
-      if (!key) continue;
-      const qty = [ing.quantity, ing.unit].filter(Boolean).join(' ').trim();
-      const part = qty ? qty + ' — ' + recipe.title : recipe.title;
-      const group = groups.get(key);
-      if (group) group.parts.push(part);
-      else groups.set(key, { name: ing.name.trim(), parts: [part] });
+  for (const slots of entriesByDate) {
+    for (const mealType of MEAL_TYPES) {
+      const entry = slots[mealType];
+      const recipe = entry && recipes[entry.recipeId];
+      if (!recipe?.ingredients) continue;
+      for (const ing of recipe.ingredients) {
+        const key = ing.name.trim().toLowerCase();
+        if (!key) continue;
+        const qty = [ing.quantity, ing.unit].filter(Boolean).join(' ').trim();
+        const part = qty ? qty + ' — ' + recipe.title : recipe.title;
+        const group = groups.get(key);
+        if (group) group.parts.push(part);
+        else groups.set(key, { name: ing.name.trim(), parts: [part] });
+      }
     }
   }
 

@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRecipes, createRecipe, updateRecipe, deleteRecipe, Ingredient } from '@/lib/recipes';
 import { suggestEmoji } from '@/lib/mealEmoji';
+import { MealType, isMealType } from '@/lib/mealTypes';
+
+function cleanMealTypes(input: unknown): MealType[] | null {
+  if (!Array.isArray(input)) return null;
+  const cleaned = Array.from(new Set(input.filter(isMealType)));
+  return cleaned.length > 0 ? cleaned : null;
+}
 
 function cleanIngredients(input: unknown): Ingredient[] | undefined {
   if (!Array.isArray(input)) return undefined;
@@ -27,14 +34,20 @@ export async function POST(request: NextRequest) {
   if (typeof body.title !== 'string' || !body.title.trim()) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 });
   }
+  const mealTypes = cleanMealTypes(body.mealTypes);
+  if (!mealTypes) {
+    return NextResponse.json({ error: 'At least one meal type is required' }, { status: 400 });
+  }
   const title = body.title.trim();
   const recipe = await createRecipe({
     title,
     emoji: typeof body.emoji === 'string' && body.emoji.trim() ? body.emoji.trim() : suggestEmoji(title),
+    mealTypes,
     notes: typeof body.notes === 'string' && body.notes.trim() ? body.notes.trim() : undefined,
     ingredients: cleanIngredients(body.ingredients),
     url: typeof body.url === 'string' && body.url.trim() ? body.url.trim() : undefined,
     sourceLabel: typeof body.sourceLabel === 'string' && body.sourceLabel.trim() ? body.sourceLabel.trim() : undefined,
+    photoUrl: typeof body.photoUrl === 'string' && body.photoUrl.trim() ? body.photoUrl.trim() : undefined,
   });
   return NextResponse.json({ recipe });
 }
@@ -45,10 +58,24 @@ export async function PATCH(request: NextRequest) {
   const patch: Record<string, unknown> = {};
   if (typeof body.title === 'string' && body.title.trim()) patch.title = body.title.trim();
   if (typeof body.emoji === 'string' && body.emoji.trim()) patch.emoji = body.emoji.trim();
+  if ('mealTypes' in body) {
+    const mealTypes = cleanMealTypes(body.mealTypes);
+    if (!mealTypes) return NextResponse.json({ error: 'At least one meal type is required' }, { status: 400 });
+    patch.mealTypes = mealTypes;
+  }
   if ('notes' in body) patch.notes = typeof body.notes === 'string' && body.notes.trim() ? body.notes.trim() : undefined;
   if ('ingredients' in body) patch.ingredients = cleanIngredients(body.ingredients);
   if ('url' in body) patch.url = typeof body.url === 'string' && body.url.trim() ? body.url.trim() : undefined;
   if ('sourceLabel' in body) patch.sourceLabel = typeof body.sourceLabel === 'string' && body.sourceLabel.trim() ? body.sourceLabel.trim() : undefined;
+  if ('photoUrl' in body) patch.photoUrl = typeof body.photoUrl === 'string' && body.photoUrl.trim() ? body.photoUrl.trim() : undefined;
+  if ('kidsRating' in body) {
+    const r = body.kidsRating;
+    patch.kidsRating = typeof r === 'number' && r >= 0 && r <= 5 ? r : undefined;
+  }
+  if ('parentsRating' in body) {
+    const r = body.parentsRating;
+    patch.parentsRating = typeof r === 'number' && r >= 0 && r <= 5 ? r : undefined;
+  }
 
   const recipe = await updateRecipe(body.id, patch);
   if (!recipe) return NextResponse.json({ error: 'Recipe not found' }, { status: 404 });

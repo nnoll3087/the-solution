@@ -26,7 +26,7 @@ export function MealsVisibilityToggle({ initialVisible }: { initialVisible: bool
         onChange={(e) => toggle(e.target.checked)}
         className="w-4 h-4 accent-[var(--theme-accent)]"
       />
-      <span className="text-text">Show the 🍽️ Meals menu in the header</span>
+      <span className="text-text">Show planned meals on the calendar (day, week, and month views)</span>
     </label>
   );
 }

@@ -1,12 +1,20 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+
+export type ZenModeHandle = { activate: () => void };
+
+type Props = { children: ReactNode; hideTrigger?: boolean };
 
 // Screensaver mode: fades out all page content so only the themed scene
 // (background, particles, decorations) remains. Tap anywhere to return.
-export function ZenMode({ children }: { children: ReactNode }) {
+// activate() is exposed via ref so a header button can trigger it when
+// hideTrigger suppresses this component's own floating button.
+export const ZenMode = forwardRef<ZenModeHandle, Props>(function ZenMode({ children, hideTrigger }, ref) {
   const [zen, setZen] = useState(false);
   const [hintVisible, setHintVisible] = useState(false);
+
+  useImperativeHandle(ref, () => ({ activate: () => setZen(true) }), []);
 
   useEffect(() => {
     if (!zen) return;
@@ -34,7 +42,7 @@ export function ZenMode({ children }: { children: ReactNode }) {
         {children}
       </div>
 
-      {!zen && (
+      {!zen && !hideTrigger && (
         <button
           onClick={() => setZen(true)}
           title="Hide the calendar and enjoy the scene"
@@ -58,4 +66,4 @@ export function ZenMode({ children }: { children: ReactNode }) {
       )}
     </>
   );
-}
+});

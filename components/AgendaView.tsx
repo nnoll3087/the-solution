@@ -1,12 +1,14 @@
 'use client';
 
 import { NormalizedEvent } from '@/lib/events';
-import { eventOnDay } from '@/lib/dates';
+import { eventOnDay, toDateKey } from '@/lib/dates';
+import { JoinedMealPlanEntry, MEAL_TYPE_LABELS } from '@/lib/mealTypes';
 import { TagDots } from './TagDots';
 
 type Props = {
   events: NormalizedEvent[];
   custodyEvents?: NormalizedEvent[];
+  mealsByDate?: Record<string, JoinedMealPlanEntry[]>;
   startDate: Date;
   days: number;
   onEventClick?: (event: NormalizedEvent) => void;
@@ -23,10 +25,15 @@ function fmtTime(iso: string): string {
   return new Date(iso).toLocaleString('default', { hour: 'numeric', minute: '2-digit' });
 }
 
-export function AgendaView({ events, custodyEvents = [], startDate, days, onEventClick }: Props) {
+export function AgendaView({ events, custodyEvents = [], mealsByDate = {}, startDate, days, onEventClick }: Props) {
   const today = new Date();
 
-  const dayList: { date: Date; events: NormalizedEvent[]; custody?: { color: string; label: string } }[] = [];
+  const dayList: {
+    date: Date;
+    events: NormalizedEvent[];
+    custody?: { color: string; label: string };
+    meals: JoinedMealPlanEntry[];
+  }[] = [];
   for (let i = 0; i < days; i++) {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
@@ -39,15 +46,16 @@ export function AgendaView({ events, custodyEvents = [], startDate, days, onEven
         return new Date(a.start).getTime() - new Date(b.start).getTime();
       });
     const custody = custodyEvents.find((e) => eventOnDay(e, dayStart, dayEnd))?.custody;
-    dayList.push({ date, events: dayEvents, custody });
+    const meals = mealsByDate[toDateKey(date)] || [];
+    dayList.push({ date, events: dayEvents, custody, meals });
   }
 
   // Always show today; skip other empty days so the list stays glanceable
-  const visible = dayList.filter((d, i) => i === 0 || d.events.length > 0);
+  const visible = dayList.filter((d, i) => i === 0 || d.events.length > 0 || d.meals.length > 0);
 
   return (
     <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed overflow-hidden lg:h-full lg:overflow-y-auto divide-y divide-[var(--theme-border)]">
-      {visible.map(({ date, events: dayEvents, custody }) => {
+      {visible.map(({ date, events: dayEvents, custody, meals }) => {
         const isToday = date.toDateString() === today.toDateString();
         return (
           <div key={date.toISOString()} className="px-4 py-3">
@@ -67,6 +75,15 @@ export function AgendaView({ events, custodyEvents = [], startDate, days, onEven
                   {custody.label}
                 </span>
               )}
+              {meals.map((meal) => (
+                <span
+                  key={meal.mealType}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full bg-accent/15 text-accent"
+                >
+                  <span>{meal.emoji}</span>
+                  {MEAL_TYPE_LABELS[meal.mealType]}: {meal.title}
+                </span>
+              ))}
             </div>
             {dayEvents.length === 0 ? (
               <p className="text-sm text-text-subtle py-1">Nothing scheduled</p>

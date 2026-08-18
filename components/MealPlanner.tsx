@@ -1,26 +1,38 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { toDateKey, parseLocalDate, startOfWeek } from '@/lib/dates';
+import { toDateKey, startOfWeek } from '@/lib/dates';
+import { MEAL_TYPES, MEAL_TYPE_LABELS, MealType } from '@/lib/mealTypes';
+import { MealSlotPicker, CreatePayload } from './MealSlotPicker';
 
 type Recipe = {
   id: string;
   title: string;
   emoji: string;
-  notes?: string;
+  mealTypes: MealType[];
 };
 
-type MealPlanEntry = { recipeId: string; notes?: string };
-type MealPlan = Record<string, MealPlanEntry>;
+type JoinedEntry = { recipeId: string; mealType: MealType; title: string; emoji: string };
+type MealPlan = Record<string, JoinedEntry>;
 
 const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+const MEAL_TYPE_ICON: Record<MealType, string> = {
+  breakfast: '🍳',
+  lunch: '🥪',
+  dinner: '🍽️',
+  snack: '🍿',
+};
+
+function slotKey(date: string, mealType: MealType): string {
+  return date + ':' + mealType;
+}
+
 export function MealPlanner({ initialRecipes, initialPlan }: { initialRecipes: Recipe[]; initialPlan: MealPlan }) {
-  const [recipes] = useState<Recipe[]>(initialRecipes);
+  const [recipes, setRecipes] = useState<Recipe[]>(initialRecipes);
   const [plan, setPlan] = useState<MealPlan>(initialPlan);
   const [anchor, setAnchor] = useState(() => startOfWeek(new Date()));
-  const [pickerDate, setPickerDate] = useState<string | null>(null);
-  const [pickerQuery, setPickerQuery] = useState('');
+  const [slot, setSlot] = useState<{ date: string; mealType: MealType } | null>(null);
 
   const days = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => {
@@ -29,18 +41,6 @@ export function MealPlanner({ initialRecipes, initialPlan }: { initialRecipes: R
       return d;
     });
   }, [anchor]);
-
-  const recipesById = useMemo(() => {
-    const map: Record<string, Recipe> = {};
-    for (const r of recipes) map[r.id] = r;
-    return map;
-  }, [recipes]);
-
-  const filteredRecipes = useMemo(() => {
-    const q = pickerQuery.toLowerCase().trim();
-    if (!q) return recipes;
-    return recipes.filter((r) => r.title.toLowerCase().includes(q));
-  }, [recipes, pickerQuery]);
 
   function goPrevWeek() {
     const d = new Date(anchor);
@@ -56,36 +56,61 @@ export function MealPlanner({ initialRecipes, initialPlan }: { initialRecipes: R
     setAnchor(startOfWeek(new Date()));
   }
 
-  function openPicker(dateKey: string) {
-    setPickerQuery('');
-    setPickerDate(dateKey);
-  }
-  function closePicker() {
-    setPickerDate(null);
+  function closeSlot() {
+    setSlot(null);
   }
 
-  async function assignRecipe(recipeId: string) {
-    if (!pickerDate) return;
-    const date = pickerDate;
-    setPlan((prev) => ({ ...prev, [date]: { recipeId } }));
-    closePicker();
+  async function assignExisting(recipeId: string) {
+    if (!slot) return;
+    const { date, mealType } = slot;
+    const recipe = recipes.find((r) => r.id === recipeId);
+    if (!recipe) return;
+    setPlan((prev) => ({ ...prev, [slotKey(date, mealType)]: { recipeId, mealType, title: recipe.title, emoji: recipe.emoji } }));
+    closeSlot();
     await fetch('/api/meal-plan', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date, recipeId }),
+      body: JSON.stringify({ date, mealType, recipeId }),
     }).catch(() => {});
   }
 
-  async function clearDay(dateKey: string) {
+  async function createAndAssign(payload: CreatePayload) {
+    if (!slot) return;
+    const { date, mealType } = slot;
+    const res = await fetch('/api/recipes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to create meal');
+    const recipe: Recipe = data.recipe;
+    setRecipes((prev) => [...prev, recipe]);
+    setPlan((prev) => ({
+      ...prev,
+      [slotKey(date, mealType)]: { recipeId: recipe.id, mealType, title: recipe.title, emoji: recipe.emoji },
+    }));
+    closeSlot();
+    await fetch('/api/meal-plan', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, mealType, recipeId: recipe.id }),
+    }).catch(() => {});
+  }
+
+  async function removeSlot() {
+    if (!slot) return;
+    const { date, mealType } = slot;
     setPlan((prev) => {
       const next = { ...prev };
-      delete next[dateKey];
+      delete next[slotKey(date, mealType)];
       return next;
     });
+    closeSlot();
     await fetch('/api/meal-plan', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: dateKey }),
+      body: JSON.stringify({ date, mealType }),
     }).catch(() => {});
   }
 
@@ -96,6 +121,13 @@ export function MealPlanner({ initialRecipes, initialPlan }: { initialRecipes: R
     const em = end.toLocaleString('default', { month: 'short', day: 'numeric' });
     return sm + ' – ' + em + ', ' + end.getFullYear();
   })();
+
+  const activeSlotEntry = slot ? plan[slotKey(slot.date, slot.mealType)] : undefined;
+  const activeDayLabel = slot
+    ? DAY_LABELS[new Date(slot.date + 'T00:00:00').getDay()] +
+      ', ' +
+      new Date(slot.date + 'T00:00:00').toLocaleString('default', { month: 'short', day: 'numeric' })
+    : '';
 
   return (
     <div>
@@ -126,105 +158,61 @@ export function MealPlanner({ initialRecipes, initialPlan }: { initialRecipes: R
       <div className="space-y-2">
         {days.map((d) => {
           const dateKey = toDateKey(d);
-          const entry = plan[dateKey];
-          const recipe = entry ? recipesById[entry.recipeId] : undefined;
           const isToday = dateKey === toDateKey(new Date());
 
           return (
             <div
               key={dateKey}
               className={
-                'flex items-center gap-3 bg-bg/25 rounded-lg px-4 py-3 border ' +
-                (isToday ? 'border-accent' : 'border-border-themed')
+                'bg-bg/25 rounded-lg px-4 py-3 border ' + (isToday ? 'border-accent' : 'border-border-themed')
               }
             >
-              <div className="w-24 flex-shrink-0">
-                <div className="text-xs uppercase tracking-wide text-text-subtle">{DAY_LABELS[d.getDay()].slice(0, 3)}</div>
-                <div className={'text-sm font-medium ' + (isToday ? 'text-accent' : 'text-text-muted')}>
+              <div className="flex items-baseline gap-2 mb-2">
+                <span className="text-xs uppercase tracking-wide text-text-subtle">{DAY_LABELS[d.getDay()].slice(0, 3)}</span>
+                <span className={'text-sm font-medium ' + (isToday ? 'text-accent' : 'text-text-muted')}>
                   {d.toLocaleString('default', { month: 'short', day: 'numeric' })}
-                </div>
+                </span>
               </div>
-
-              {recipe ? (
-                <>
-                  <span className="text-2xl flex-shrink-0">{recipe.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-text font-medium truncate">{recipe.title}</div>
-                  </div>
-                  <button
-                    onClick={() => openPicker(dateKey)}
-                    className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-surface-elevated text-text-muted hover:text-text transition"
-                    title="Change"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() => clearDay(dateKey)}
-                    className="w-9 h-9 flex items-center justify-center rounded-md hover:bg-surface-elevated text-text-muted hover:text-text transition"
-                    title="Remove"
-                  >
-                    🗑️
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => openPicker(dateKey)}
-                  className="flex-1 text-left text-text-subtle hover:text-text text-sm transition"
-                >
-                  + Add meal
-                </button>
-              )}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                {MEAL_TYPES.map((mealType) => {
+                  const entry = plan[slotKey(dateKey, mealType)];
+                  return (
+                    <button
+                      key={mealType}
+                      onClick={() => setSlot({ date: dateKey, mealType })}
+                      className="flex items-center gap-1.5 px-2 py-1.5 rounded-md border border-border-themed bg-surface/40 hover:bg-surface text-left transition min-w-0"
+                    >
+                      {entry ? (
+                        <>
+                          <span className="text-base flex-shrink-0">{entry.emoji}</span>
+                          <span className="text-xs text-text font-medium truncate">{entry.title}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-base flex-shrink-0 opacity-40">{MEAL_TYPE_ICON[mealType]}</span>
+                          <span className="text-xs text-text-subtle truncate">{MEAL_TYPE_LABELS[mealType]}</span>
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           );
         })}
       </div>
 
-      {pickerDate && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          onClick={closePicker}
-        >
-          <div
-            className="bg-surface-elevated rounded-xl border border-border-themed max-w-md w-full p-6 shadow-2xl max-h-[80vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <h2 className="text-lg font-semibold text-text">
-                {DAY_LABELS[parseLocalDate(pickerDate).getDay()]}, {parseLocalDate(pickerDate).toLocaleString('default', { month: 'short', day: 'numeric' })}
-              </h2>
-              <button onClick={closePicker} className="text-text-muted hover:text-text text-2xl leading-none">×</button>
-            </div>
-
-            <input
-              type="text"
-              value={pickerQuery}
-              onChange={(e) => setPickerQuery(e.target.value)}
-              placeholder="Search recipes..."
-              autoFocus
-              className="w-full bg-bg/50 border border-border-themed rounded-md px-3 py-2 text-text text-sm mb-3"
-            />
-
-            <div className="overflow-y-auto space-y-1.5">
-              {filteredRecipes.length === 0 ? (
-                <p className="text-sm text-text-subtle py-4 text-center">
-                  No recipes match. Add one in the{' '}
-                  <a href="/meals/recipes" className="text-accent hover:brightness-125">Recipe Library</a>.
-                </p>
-              ) : (
-                filteredRecipes.map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={() => assignRecipe(r.id)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface text-left transition"
-                  >
-                    <span className="text-xl flex-shrink-0">{r.emoji}</span>
-                    <span className="text-text text-sm font-medium truncate">{r.title}</span>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
+      {slot && (
+        <MealSlotPicker
+          dayLabel={activeDayLabel}
+          mealType={slot.mealType}
+          current={activeSlotEntry ? { title: activeSlotEntry.title, emoji: activeSlotEntry.emoji } : undefined}
+          recipes={recipes}
+          onAssignExisting={assignExisting}
+          onCreateAndAssign={createAndAssign}
+          onRemove={removeSlot}
+          onClose={closeSlot}
+        />
       )}
     </div>
   );

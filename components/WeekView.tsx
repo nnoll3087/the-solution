@@ -1,12 +1,14 @@
 'use client';
 
 import { NormalizedEvent } from '@/lib/events';
-import { eventOnDay } from '@/lib/dates';
+import { eventOnDay, toDateKey } from '@/lib/dates';
+import { JoinedMealPlanEntry } from '@/lib/mealTypes';
 import { TagDots } from './TagDots';
 
 type Props = {
   events: NormalizedEvent[];
   custodyEvents?: NormalizedEvent[];
+  mealsByDate?: Record<string, JoinedMealPlanEntry[]>;
   weekStart: Date;
   onEventClick?: (event: NormalizedEvent) => void;
   onSlotClick?: (date: Date) => void;
@@ -73,11 +75,14 @@ function layoutTimedEvents(events: NormalizedEvent[]): PositionedEvent[] {
   return positioned;
 }
 
-export function WeekView({ events, custodyEvents = [], weekStart, onEventClick, onSlotClick }: Props) {
+export function WeekView({ events, custodyEvents = [], mealsByDate = {}, weekStart, onEventClick, onSlotClick }: Props) {
   function custodyForDay(day: Date) {
     const dayStart = new Date(day).setHours(0, 0, 0, 0);
     const dayEnd = new Date(day).setHours(23, 59, 59, 999);
     return custodyEvents.find((e) => eventOnDay(e, dayStart, dayEnd))?.custody;
+  }
+  function mealsForDay(day: Date): JoinedMealPlanEntry[] {
+    return mealsByDate[toDateKey(day)] || [];
   }
   const today = new Date();
   const days = Array.from({ length: 7 }, (_, i) => {
@@ -118,6 +123,7 @@ export function WeekView({ events, custodyEvents = [], weekStart, onEventClick, 
         {days.map((d, i) => {
           const isToday = isSameDay(d, today);
           const custody = custodyForDay(d);
+          const dayMeals = mealsForDay(d);
           return (
             <div
               key={i}
@@ -127,6 +133,11 @@ export function WeekView({ events, custodyEvents = [], weekStart, onEventClick, 
             >
               <div className="text-xs text-text-muted uppercase tracking-wide">{DAY_LABELS[d.getDay()]}</div>
               <div className={'text-lg font-semibold ' + (isToday ? 'text-accent' : 'text-text')}>{d.getDate()}</div>
+              {dayMeals.length > 0 && (
+                <div className="text-xs text-text-subtle truncate" title={dayMeals.map((m) => m.title).join(', ')}>
+                  {dayMeals.map((m) => m.emoji).join(' ')}
+                </div>
+              )}
             </div>
           );
         })}
