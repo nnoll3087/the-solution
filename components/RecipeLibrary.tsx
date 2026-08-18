@@ -77,6 +77,17 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
     return () => clearTimeout(t);
   }, [query]);
 
+  // Deep link from the meal planner: /meals/recipes?edit=<id> opens straight
+  // to that meal's edit form, so rating/notes/photo are one tap away instead
+  // of requiring a manual search here.
+  useEffect(() => {
+    const editId = new URLSearchParams(window.location.search).get('edit');
+    if (!editId) return;
+    const target = initialRecipes.find((r) => r.id === editId);
+    if (target) openEditForm(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function openAddForm() {
     setEditingId(null);
     setForm(EMPTY_FORM);

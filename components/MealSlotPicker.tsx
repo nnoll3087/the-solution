@@ -22,10 +22,12 @@ export type CreatePayload = {
   photoUrl?: string;
 };
 
+type CurrentMeal = { recipeId: string; title: string; emoji: string; kidsRating?: number; parentsRating?: number };
+
 type Props = {
   dayLabel: string;
   mealType: MealType;
-  current?: { title: string; emoji: string };
+  current?: CurrentMeal;
   recipes: Recipe[];
   onAssignExisting: (recipeId: string) => void;
   onCreateAndAssign: (payload: CreatePayload) => Promise<void>;
@@ -55,6 +57,11 @@ export function MealSlotPicker({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+  // A filled slot opens straight to a compact summary (view/edit/remove) —
+  // no keyboard, no form — instead of the full create/assign form. "Change"
+  // reveals that form. Empty slots go straight to it since there's nothing
+  // to summarize.
+  const [changing, setChanging] = useState(!current);
 
   const existingList = useMemo(() => {
     if (query.trim()) {
@@ -119,19 +126,56 @@ export function MealSlotPicker({
         className="bg-surface-elevated rounded-xl border border-border-themed max-w-md w-full p-6 shadow-2xl max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between gap-4 mb-1">
+        <div className="flex items-center justify-between gap-4 mb-3">
           <h2 className="text-lg font-semibold text-text">
             {MEAL_TYPE_LABELS[mealType]}, {dayLabel}
           </h2>
           <button onClick={onClose} className="text-text-muted hover:text-text text-2xl leading-none">×</button>
         </div>
-        {current && (
-          <button onClick={onRemove} className="text-xs text-danger-themed hover:brightness-125 mb-3 self-start">
-            Remove {current.emoji} {current.title} from this slot
-          </button>
-        )}
 
+        {current && !changing ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-bg/40 border border-border-themed">
+              <span className="text-2xl flex-shrink-0">{current.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-text font-medium truncate">{current.title}</div>
+                {(!!current.kidsRating || !!current.parentsRating) && (
+                  <div className="text-xs text-text-muted mt-0.5">
+                    {!!current.kidsRating && '🧒' + current.kidsRating}
+                    {!!current.kidsRating && !!current.parentsRating && '  '}
+                    {!!current.parentsRating && '🧑' + current.parentsRating}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <a
+                href={'/meals/recipes?edit=' + current.recipeId}
+                className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg bg-surface hover:bg-bg text-text text-xs font-medium transition"
+              >
+                <span className="text-lg">✏️</span> Edit
+              </a>
+              <button
+                onClick={() => setChanging(true)}
+                className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg bg-surface hover:bg-bg text-text text-xs font-medium transition"
+              >
+                <span className="text-lg">🔁</span> Change
+              </button>
+              <button
+                onClick={onRemove}
+                className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg bg-surface hover:bg-bg text-danger-themed text-xs font-medium transition"
+              >
+                <span className="text-lg">🗑️</span> Remove
+              </button>
+            </div>
+          </div>
+        ) : (
         <div className="overflow-y-auto space-y-4 pr-1">
+          {current && (
+            <button onClick={() => setChanging(false)} className="text-xs text-text-muted hover:text-text -mt-1">
+              ‹ Back to {current.emoji} {current.title}
+            </button>
+          )}
           {error && (
             <div className="bg-danger-themed/20 border border-danger-themed/40 rounded-md px-3 py-2 text-sm text-danger-themed">
               {error}
@@ -146,7 +190,6 @@ export function MealSlotPicker({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Taco night"
               className={inputCls}
-              autoFocus
             />
           </div>
 
@@ -182,7 +225,7 @@ export function MealSlotPicker({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Link (optional)</label>
               <input type="text" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Recipe URL" className={inputCls} />
@@ -254,6 +297,7 @@ export function MealSlotPicker({
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

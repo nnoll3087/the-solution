@@ -125,6 +125,7 @@ export function MealPlanner({ initialRecipes, initialPlan }: { initialRecipes: R
   })();
 
   const activeSlotEntry = slot ? plan[slotKey(slot.date, slot.mealType)] : undefined;
+  const activeRecipe = activeSlotEntry ? recipes.find((r) => r.id === activeSlotEntry.recipeId) : undefined;
   const activeDayLabel = slot
     ? DAY_LABELS[new Date(slot.date + 'T00:00:00').getDay()] +
       ', ' +
@@ -208,7 +209,17 @@ export function MealPlanner({ initialRecipes, initialPlan }: { initialRecipes: R
         <MealSlotPicker
           dayLabel={activeDayLabel}
           mealType={slot.mealType}
-          current={activeSlotEntry ? { title: activeSlotEntry.title, emoji: activeSlotEntry.emoji } : undefined}
+          current={
+            activeSlotEntry
+              ? {
+                  recipeId: activeSlotEntry.recipeId,
+                  title: activeSlotEntry.title,
+                  emoji: activeSlotEntry.emoji,
+                  kidsRating: activeRecipe?.kidsRating,
+                  parentsRating: activeRecipe?.parentsRating,
+                }
+              : undefined
+          }
           recipes={recipes}
           onAssignExisting={assignExisting}
           onCreateAndAssign={createAndAssign}
