@@ -4,8 +4,9 @@ import { useState } from 'react';
 
 const LINKS = [
   { href: '/meals', label: 'Meal Planner', icon: '📅' },
-  { href: '/meals/recipes', label: 'Recipe Library', icon: '📖' },
+  { href: '/meals/recipes', label: 'All Meals', icon: '📖' },
   { href: '/meals/shopping-list', label: 'Shopping List', icon: '🛒' },
+  { href: '/meals/assistant', label: 'Ask About Meals', icon: '🤖' },
 ];
 
 export function MealsMenu() {
