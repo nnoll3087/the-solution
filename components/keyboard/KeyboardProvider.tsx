@@ -26,6 +26,19 @@ function eligibleField(target: EventTarget | null): EditableField | null {
   return null;
 }
 
+// Nearest ancestor that actually scrolls (a drawer's own overflow-y-auto, or
+// the document itself), so the keyboard-clearance buffer lands on the right
+// element instead of always growing document.body.
+function findScrollParent(el: HTMLElement): HTMLElement {
+  let node = el.parentElement;
+  while (node) {
+    const style = getComputedStyle(node);
+    if (/(auto|scroll)/.test(style.overflowY) && node.scrollHeight > node.clientHeight) return node;
+    node = node.parentElement;
+  }
+  return (document.scrollingElement as HTMLElement) || document.documentElement;
+}
+
 export function KeyboardProvider() {
   const [enabled, setEnabled] = useState(false);
   const [field, setField] = useState<EditableField | null>(null);
@@ -72,18 +85,22 @@ export function KeyboardProvider() {
     };
   }, [enabled]);
 
-  // Keep the focused field visible above the tray: reserve space at the bottom
-  // of the page, then center the field once the 200ms slide has finished.
-  // scrollIntoView also handles fields inside scrollable drawers/panels.
+  // Keep the focused field visible above the tray. scroll-padding-bottom
+  // reserves clearance for scrollIntoView's calculation without adding any
+  // box height itself, so it can't introduce a scrollbar on a page (like the
+  // kiosk calendar) that's deliberately locked to the viewport. Applied to
+  // whichever container actually scrolls the field, not always the document.
   useEffect(() => {
     if (!field) return;
-    document.body.style.paddingBottom = KEYBOARD_PAD_PX + 'px';
+    const scrollParent = findScrollParent(field);
+    const prevPadding = scrollParent.style.scrollPaddingBottom;
+    scrollParent.style.scrollPaddingBottom = KEYBOARD_PAD_PX + 'px';
     const t = setTimeout(() => {
       field.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }, 220);
     return () => {
       clearTimeout(t);
-      document.body.style.paddingBottom = '';
+      scrollParent.style.scrollPaddingBottom = prevPadding;
     };
   }, [field]);
 
