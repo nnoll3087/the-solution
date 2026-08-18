@@ -53,7 +53,7 @@ export function ThemePrompt() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="px-3 py-2 min-h-[40px] rounded-lg bg-surface/80 backdrop-blur hover:bg-surface-elevated text-text text-sm border border-border-themed whitespace-nowrap transition"
+        className="px-3 h-10 flex items-center rounded-lg bg-surface/80 backdrop-blur hover:bg-surface-elevated text-text text-sm border border-border-themed whitespace-nowrap transition"
         title="Current theme"
       >
         <span className="mr-2">🎨</span>

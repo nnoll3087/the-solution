@@ -7,9 +7,7 @@ import { MealsMenu } from './MealsMenu';
 import { ThemePrompt } from './ThemePrompt';
 import { ZenMode, ZenModeHandle } from './ZenMode';
 import { Slideshow, SlideshowHandle } from './Slideshow';
-
-const iconButtonCls =
-  'w-10 h-10 flex items-center justify-center rounded-lg bg-surface/80 backdrop-blur hover:bg-surface-elevated border border-border-themed text-text-muted hover:text-text transition';
+import { headerIconButtonCls as iconButtonCls } from '@/lib/uiClasses';
 
 export function HomeShell({ mealsVisible }: { mealsVisible: boolean }) {
   const zenRef = useRef<ZenModeHandle>(null);

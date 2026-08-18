@@ -5,6 +5,7 @@ import imageCompression from 'browser-image-compression';
 import { suggestEmoji } from '@/lib/mealEmoji';
 import { MEAL_TYPES, MEAL_TYPE_LABELS, MealType } from '@/lib/mealTypes';
 import { StarRating } from './StarRating';
+import { EmptyState } from './EmptyState';
 
 type Ingredient = { name: string; quantity?: string; unit?: string };
 
@@ -412,9 +413,10 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
       )}
 
       {recipes.length === 0 ? (
-        <p className="text-sm text-text-subtle">
-          {query ? 'No meals match that search.' : 'No meals yet. Add your first one above.'}
-        </p>
+        <EmptyState
+          icon="🍽️"
+          message={query ? 'No meals match that search.' : 'No meals yet. Add your first one above.'}
+        />
       ) : (
         <ul className="space-y-2">
           {recipes.map((recipe) => (

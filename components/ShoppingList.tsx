@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { toDateKey, startOfWeek } from '@/lib/dates';
+import { EmptyState } from './EmptyState';
 
 type AggregatedIngredient = { id: string; name: string; detail: string; checked: boolean };
 type ExtraItem = { id: string; text: string; checked: boolean };
@@ -130,10 +131,15 @@ export function ShoppingList({
       </div>
 
       {isEmpty && !loading ? (
-        <p className="text-sm text-text-subtle">
-          Nothing planned this week yet.{' '}
-          <a href="/meals" className="text-accent hover:brightness-125">Assign some meals</a>, or add items below.
-        </p>
+        <EmptyState
+          icon="🛒"
+          message="Nothing planned for this week yet."
+          action={
+            <a href="/meals" className="text-accent hover:brightness-125 text-sm">
+              Assign some meals →
+            </a>
+          }
+        />
       ) : (
         <ul className="space-y-1.5 mb-6">
           {ingredients.map((ing) => (

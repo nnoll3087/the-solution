@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { EmptyState } from './EmptyState';
 
 type ChangeType = 'new' | 'changed' | 'deleted';
 
@@ -140,9 +141,7 @@ export function QueueView() {
       )}
 
       {filtered.length === 0 ? (
-        <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed p-8 text-center">
-          <p className="text-text-muted">All caught up.</p>
-        </div>
+        <EmptyState icon="✅" message="All caught up." />
       ) : (
         <ul className="space-y-2">
           {filtered.map((entry) => (

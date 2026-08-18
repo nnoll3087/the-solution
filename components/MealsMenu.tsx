@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { headerIconButtonCls } from '@/lib/uiClasses';
 
 const LINKS = [
   { href: '/meals', label: 'Meal Planner', icon: '📅' },
@@ -16,7 +17,7 @@ export function MealsMenu() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="w-10 h-10 flex items-center justify-center rounded-lg bg-surface/80 backdrop-blur hover:bg-surface-elevated border border-border-themed text-text-muted hover:text-text transition"
+        className={headerIconButtonCls}
         title="Meals"
       >
         🍽️
