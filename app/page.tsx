@@ -3,8 +3,11 @@ import { QueuePreview } from '@/components/QueuePreview';
 import { ThemePrompt } from '@/components/ThemePrompt';
 import { ZenMode } from '@/components/ZenMode';
 import { Slideshow } from '@/components/Slideshow';
+import { MealsMenu } from '@/components/MealsMenu';
+import { getMealsVisible } from '@/lib/config';
 
-export default function Home() {
+export default async function Home() {
+  const mealsVisible = await getMealsVisible();
   return (
     <>
     <ZenMode>
@@ -12,6 +15,7 @@ export default function Home() {
         <header className="mb-3 shrink-0 flex items-center justify-between gap-3">
           <h1 className="text-xl sm:text-2xl font-bold text-text">The Solution®</h1>
           <div className="flex items-center gap-2">
+            {mealsVisible && <MealsMenu />}
             <ThemePrompt />
             <a
               href="/setup"

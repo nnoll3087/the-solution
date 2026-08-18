@@ -47,3 +47,6 @@ next-env.d.ts
 .theme.json
 .event-tags.json
 .usage.json
+.recipes.json
+.meal-plan.json
+.shopping-list.json

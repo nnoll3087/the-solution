@@ -13,6 +13,10 @@ export type AppConfig = {
   // Events whose title contains any of these phrases (case-insensitive) are
   // dropped everywhere in the app — calendar views, queue, everything.
   excludedTitles?: string[];
+  // Shared display toggles (kiosk + phones agree on what's showing), not
+  // per-device localStorage.
+  mealsVisible?: boolean;
+  photoFrameEnabled?: boolean;
 };
 
 const DEFAULT_CONFIG: AppConfig = { calendars: [] };
@@ -58,4 +62,15 @@ export async function getCustodyConfig(): Promise<CustodyConfig | null> {
 export async function saveCustodyConfig(custody: CustodyConfig | null) {
   const config = await getConfig();
   await saveConfig({ ...config, custody: custody ?? undefined });
+}
+
+// Defaults to visible: the meals header entry has always shown since it was
+// introduced, so an unset flag should not silently hide it.
+export async function getMealsVisible(): Promise<boolean> {
+  return (await getConfig()).mealsVisible ?? true;
+}
+
+export async function saveMealsVisible(visible: boolean) {
+  const config = await getConfig();
+  await saveConfig({ ...config, mealsVisible: visible });
 }

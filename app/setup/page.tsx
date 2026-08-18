@@ -6,12 +6,15 @@ import { CalendarSelector } from '@/components/CalendarSelector';
 import { CustodySettings } from '@/components/CustodySettings';
 import { ExclusionSettings } from '@/components/ExclusionSettings';
 import { PhotoManager } from '@/components/PhotoManager';
+import { MealsVisibilityToggle } from '@/components/MealsVisibilityToggle';
+import { getMealsVisible } from '@/lib/config';
 
 export default async function SetupPage({ searchParams }: { searchParams: Promise<{ connected?: string }> }) {
   const params = await searchParams;
   const tokens = await getAllTokens();
   const calendars = tokens.length > 0 ? await listAllCalendars() : [];
   const config = await getConfig();
+  const mealsVisible = await getMealsVisible();
 
   return (
     <main className="min-h-screen text-text p-4 sm:p-8">
@@ -68,6 +71,10 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
             <ExclusionSettings initialPhrases={config.excludedTitles ?? []} />
           </div>
         )}
+        <div className="bg-surface/80 backdrop-blur rounded-lg p-6 border border-border-themed mb-6">
+          <h2 className="text-lg font-semibold mb-4">Meals</h2>
+          <MealsVisibilityToggle initialVisible={mealsVisible} />
+        </div>
         <div className="bg-surface/80 backdrop-blur rounded-lg p-6 border border-border-themed mb-6">
           <h2 className="text-lg font-semibold mb-4">Photo Frame</h2>
           <PhotoManager />

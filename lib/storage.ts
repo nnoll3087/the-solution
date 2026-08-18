@@ -5,7 +5,7 @@ import { Pool } from 'pg';
 // Backend switch: Postgres when POSTGRES_URL is set (Vercel), JSON files otherwise (local dev).
 // Values are whole documents — each key maps 1:1 to one of the legacy root JSON files.
 
-export type StoreKey = 'config' | 'tokens' | 'snapshots' | 'queue' | 'queue-prefs' | 'theme' | 'event-tags' | 'usage' | 'photos';
+export type StoreKey = 'config' | 'tokens' | 'snapshots' | 'queue' | 'queue-prefs' | 'theme' | 'event-tags' | 'usage' | 'photos' | 'recipes' | 'meal-plan' | 'shopping-list';
 
 const FILES: Record<StoreKey, string> = {
   config: '.config.json',
@@ -17,6 +17,9 @@ const FILES: Record<StoreKey, string> = {
   'event-tags': '.event-tags.json',
   usage: '.usage.json',
   photos: '.photos.json',
+  recipes: '.recipes.json',
+  'meal-plan': '.meal-plan.json',
+  'shopping-list': '.shopping-list.json',
 };
 
 function filePath(key: StoreKey) {
