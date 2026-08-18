@@ -10,6 +10,8 @@ type Recipe = {
   title: string;
   emoji: string;
   mealTypes: MealType[];
+  kidsRating?: number;
+  parentsRating?: number;
 };
 
 export type CreatePayload = {
@@ -238,7 +240,14 @@ export function MealSlotPicker({
                     className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface text-left transition"
                   >
                     <span className="text-xl flex-shrink-0">{r.emoji || suggestEmoji(r.title)}</span>
-                    <span className="text-text text-sm font-medium truncate">{r.title}</span>
+                    <span className="text-text text-sm font-medium truncate flex-1">{r.title}</span>
+                    {(!!r.kidsRating || !!r.parentsRating) && (
+                      <span className="text-xs text-text-muted flex-shrink-0 whitespace-nowrap">
+                        {!!r.kidsRating && '🧒' + r.kidsRating}
+                        {!!r.kidsRating && !!r.parentsRating && ' '}
+                        {!!r.parentsRating && '🧑' + r.parentsRating}
+                      </span>
+                    )}
                   </button>
                 ))
               )}

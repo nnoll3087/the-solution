@@ -10,6 +10,8 @@ type Recipe = {
   title: string;
   emoji: string;
   mealTypes: MealType[];
+  kidsRating?: number;
+  parentsRating?: number;
 };
 
 type JoinedEntry = { recipeId: string; mealType: MealType; title: string; emoji: string };

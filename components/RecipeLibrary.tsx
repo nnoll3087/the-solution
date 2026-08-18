@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import imageCompression from 'browser-image-compression';
 import { suggestEmoji } from '@/lib/mealEmoji';
 import { MEAL_TYPES, MEAL_TYPE_LABELS, MealType } from '@/lib/mealTypes';
+import { StarRating } from './StarRating';
 
 type Ingredient = { name: string; quantity?: string; unit?: string };
 
@@ -17,6 +18,8 @@ type Recipe = {
   url?: string;
   sourceLabel?: string;
   photoUrl?: string;
+  kidsRating?: number;
+  parentsRating?: number;
 };
 
 type FormState = {
@@ -29,6 +32,8 @@ type FormState = {
   url: string;
   sourceLabel: string;
   photoUrl: string;
+  kidsRating: number;
+  parentsRating: number;
 };
 
 const EMPTY_FORM: FormState = {
@@ -41,6 +46,8 @@ const EMPTY_FORM: FormState = {
   url: '',
   sourceLabel: '',
   photoUrl: '',
+  kidsRating: 0,
+  parentsRating: 0,
 };
 
 const inputCls = 'w-full bg-bg/50 border border-border-themed rounded-md px-3 py-2 text-text text-sm';
@@ -89,6 +96,8 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
       url: recipe.url || '',
       sourceLabel: recipe.sourceLabel || '',
       photoUrl: recipe.photoUrl || '',
+      kidsRating: recipe.kidsRating || 0,
+      parentsRating: recipe.parentsRating || 0,
     });
     setError(null);
     setFormOpen(true);
@@ -168,6 +177,8 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
       url: form.url.trim() || undefined,
       sourceLabel: form.sourceLabel.trim() || undefined,
       photoUrl: form.photoUrl || undefined,
+      kidsRating: form.kidsRating || undefined,
+      parentsRating: form.parentsRating || undefined,
     };
     try {
       const res = await fetch('/api/recipes', {
@@ -270,6 +281,17 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
                   {MEAL_TYPE_LABELS[mt]}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div className="flex gap-6">
+            <div>
+              <label className={labelCls}>Kids rating</label>
+              <StarRating value={form.kidsRating} onChange={(v) => setForm((f) => ({ ...f, kidsRating: v }))} />
+            </div>
+            <div>
+              <label className={labelCls}>Parents rating</label>
+              <StarRating value={form.parentsRating} onChange={(v) => setForm((f) => ({ ...f, parentsRating: v }))} />
             </div>
           </div>
 
@@ -408,6 +430,12 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
                     <span className="text-xs text-text-muted">{recipe.ingredients.length} ingredient{recipe.ingredients.length === 1 ? '' : 's'}</span>
                   )}
                   {recipe.url && <span className="text-xs text-text-muted">🔗 link</span>}
+                  {!!recipe.kidsRating && (
+                    <div className="flex items-center gap-1 text-xs text-text-muted">🧒 <StarRating value={recipe.kidsRating} size="sm" /></div>
+                  )}
+                  {!!recipe.parentsRating && (
+                    <div className="flex items-center gap-1 text-xs text-text-muted">🧑 <StarRating value={recipe.parentsRating} size="sm" /></div>
+                  )}
                 </div>
               </div>
               {confirmDeleteId === recipe.id ? (
