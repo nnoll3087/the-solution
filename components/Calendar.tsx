@@ -22,13 +22,24 @@ type CalendarOption = {
 const AGENDA_DAYS = 14;
 const FILTER_STORAGE_KEY = 'solution-person-filter';
 
-export function Calendar({ mealsVisible }: { mealsVisible: boolean }) {
+export function Calendar({ initialMealsVisible }: { initialMealsVisible: boolean }) {
   const [current, setCurrent] = useState<Date>(new Date());
   const [view, setView] = useState<ViewMode>('month');
   const [calendars, setCalendars] = useState<CalendarOption[]>([]);
   // null = everyone (no filter applied yet / Family)
   const [selectedKeys, setSelectedKeys] = useState<Set<string> | null>(null);
+  const [mealsVisible, setMealsVisible] = useState(initialMealsVisible);
   const [mealsByDate, setMealsByDate] = useState<Record<string, JoinedMealPlanEntry[]>>({});
+
+  function toggleMealsVisible() {
+    const next = !mealsVisible;
+    setMealsVisible(next);
+    fetch('/api/settings/meals-visible', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mealsVisible: next }),
+    }).catch(() => {});
+  }
 
   // Phones default to the agenda; set after mount to avoid a hydration mismatch
   useEffect(() => {
@@ -295,6 +306,18 @@ export function Calendar({ mealsVisible }: { mealsVisible: boolean }) {
               </button>
             );
           })}
+          <button
+            onClick={toggleMealsVisible}
+            title={mealsVisible ? 'Hide planned meals from the calendar' : 'Show planned meals on the calendar'}
+            className={
+              'inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-full text-sm font-medium border transition ' +
+              (mealsVisible
+                ? 'bg-text text-bg border-transparent font-semibold'
+                : 'bg-surface/40 backdrop-blur text-text-subtle border-border-themed hover:text-text-muted opacity-70')
+            }
+          >
+            🍽️ Meals
+          </button>
         </div>
       )}
 

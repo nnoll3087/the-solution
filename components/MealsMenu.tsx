@@ -15,11 +15,10 @@ export function MealsMenu() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="px-3 py-2 min-h-[40px] rounded-lg bg-surface/80 backdrop-blur hover:bg-surface-elevated text-text text-sm border border-border-themed whitespace-nowrap transition"
+        className="w-10 h-10 flex items-center justify-center rounded-lg bg-surface/80 backdrop-blur hover:bg-surface-elevated border border-border-themed text-text-muted hover:text-text transition"
         title="Meals"
       >
-        <span className="mr-1.5">🍽️</span>
-        Meals
+        🍽️
       </button>
 
       {open && (
@@ -27,7 +26,7 @@ export function MealsMenu() {
           {/* Dismiss on pointerdown, not click: touch taps on the on-screen keyboard
               fire a trailing click that can land here after the tray hides */}
           <div onPointerDown={() => setOpen(false)} className="fixed inset-0 z-40" />
-          <div className="absolute right-0 top-full mt-2 w-56 bg-surface-elevated border border-border-themed rounded-lg shadow-2xl z-50 p-1.5">
+          <div className="absolute left-0 top-full mt-2 w-56 bg-surface-elevated border border-border-themed rounded-lg shadow-2xl z-50 p-1.5">
             {LINKS.map((link) => (
               <a
                 key={link.href}

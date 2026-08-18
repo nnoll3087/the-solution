@@ -23,20 +23,20 @@ export function HomeShell({ mealsVisible }: { mealsVisible: boolean }) {
             <h1 className="text-xl sm:text-2xl font-bold text-text">The Solution®</h1>
             <div className="flex items-center gap-2">
               <MealsMenu />
-              <ThemePrompt />
               <button onClick={() => slideshowRef.current?.activate()} title="Start the photo slideshow" className={iconButtonCls}>
                 🖼️
               </button>
               <button onClick={() => zenRef.current?.activate()} title="Hide the calendar and enjoy the scene" className={iconButtonCls}>
                 ✨
               </button>
+              <ThemePrompt />
               <a href="/setup" title="Settings" className={iconButtonCls}>
                 ⚙️
               </a>
             </div>
           </header>
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] lg:grid-rows-[minmax(0,1fr)] gap-4 lg:flex-1 lg:min-h-0">
-            <Calendar mealsVisible={mealsVisible} />
+            <Calendar initialMealsVisible={mealsVisible} />
             <QueuePreview />
           </div>
         </main>
