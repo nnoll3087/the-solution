@@ -6,8 +6,7 @@ import { suggestEmoji } from '@/lib/mealEmoji';
 import { MEAL_TYPES, MEAL_TYPE_LABELS, MealType } from '@/lib/mealTypes';
 import { StarRating } from './StarRating';
 import { EmptyState } from './EmptyState';
-
-type Ingredient = { name: string; quantity?: string; unit?: string };
+import { MealCreateFlow, MealCreatePayload } from './MealCreateFlow';
 
 type Recipe = {
   id: string;
@@ -15,7 +14,6 @@ type Recipe = {
   emoji: string;
   mealTypes: MealType[];
   notes?: string;
-  ingredients?: Ingredient[];
   url?: string;
   sourceLabel?: string;
   photoUrl?: string;
@@ -29,7 +27,6 @@ type FormState = {
   emojiTouched: boolean;
   mealTypes: MealType[];
   notes: string;
-  ingredients: Ingredient[];
   url: string;
   sourceLabel: string;
   photoUrl: string;
@@ -43,7 +40,6 @@ const EMPTY_FORM: FormState = {
   emojiTouched: false,
   mealTypes: [],
   notes: '',
-  ingredients: [],
   url: '',
   sourceLabel: '',
   photoUrl: '',
@@ -57,6 +53,7 @@ const labelCls = 'block text-xs uppercase tracking-wide text-text-muted mb-1';
 export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) {
   const [recipes, setRecipes] = useState<Recipe[]>(initialRecipes);
   const [query, setQuery] = useState('');
+  const [addOpen, setAddOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -89,11 +86,16 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function openAddForm() {
-    setEditingId(null);
-    setForm(EMPTY_FORM);
-    setError(null);
-    setFormOpen(true);
+  async function handleQuickCreate(payload: MealCreatePayload) {
+    const res = await fetch('/api/recipes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to save meal');
+    setAddOpen(false);
+    load(query || undefined);
   }
 
   function openEditForm(recipe: Recipe) {
@@ -104,7 +106,6 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
       emojiTouched: true,
       mealTypes: recipe.mealTypes || [],
       notes: recipe.notes || '',
-      ingredients: recipe.ingredients || [],
       url: recipe.url || '',
       sourceLabel: recipe.sourceLabel || '',
       photoUrl: recipe.photoUrl || '',
@@ -154,21 +155,6 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
     setForm((f) => ({ ...f, emoji, emojiTouched: true }));
   }
 
-  function addIngredientRow() {
-    setForm((f) => ({ ...f, ingredients: [...f.ingredients, { name: '', quantity: '', unit: '' }] }));
-  }
-
-  function updateIngredient(i: number, patch: Partial<Ingredient>) {
-    setForm((f) => ({
-      ...f,
-      ingredients: f.ingredients.map((ing, idx) => (idx === i ? { ...ing, ...patch } : ing)),
-    }));
-  }
-
-  function removeIngredient(i: number) {
-    setForm((f) => ({ ...f, ingredients: f.ingredients.filter((_, idx) => idx !== i) }));
-  }
-
   async function submit() {
     if (!form.title.trim()) {
       setError('Title is required');
@@ -185,7 +171,6 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
       emoji: form.emoji.trim() || suggestEmoji(form.title),
       mealTypes: form.mealTypes,
       notes: form.notes.trim() || undefined,
-      ingredients: form.ingredients.filter((i) => i.name.trim()),
       url: form.url.trim() || undefined,
       sourceLabel: form.sourceLabel.trim() || undefined,
       photoUrl: form.photoUrl || undefined,
@@ -194,9 +179,9 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
     };
     try {
       const res = await fetch('/api/recipes', {
-        method: editingId ? 'PATCH' : 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingId ? { id: editingId, ...payload } : payload),
+        body: JSON.stringify({ id: editingId, ...payload }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save recipe');
@@ -231,17 +216,27 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
           className={inputCls + ' flex-1 min-w-[160px]'}
         />
         <button
-          onClick={openAddForm}
+          onClick={() => setAddOpen(true)}
           className="px-4 py-2.5 min-h-[44px] rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-medium transition whitespace-nowrap"
         >
           + Add meal
         </button>
       </div>
 
+      {addOpen && (
+        <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed p-5 mb-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-text">New meal</h2>
+            <button onClick={() => setAddOpen(false)} className="text-text-muted hover:text-text text-2xl leading-none">×</button>
+          </div>
+          <MealCreateFlow onCreate={handleQuickCreate} submitLabel="Add meal" />
+        </div>
+      )}
+
       {formOpen && (
         <div className="bg-surface/80 backdrop-blur rounded-lg border border-border-themed p-5 mb-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-text">{editingId ? 'Edit meal' : 'New meal'}</h2>
+            <h2 className="text-lg font-semibold text-text">Edit meal</h2>
             <button onClick={closeForm} className="text-text-muted hover:text-text text-2xl leading-none">×</button>
           </div>
 
@@ -334,48 +329,10 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
             <textarea
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              rows={3}
+              rows={6}
               className={inputCls + ' resize-none'}
-              placeholder="Prep steps, tips, whatever's useful"
+              placeholder="Ingredients, prep steps, whatever — paste it in however you've got it"
             />
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className={labelCls}>Ingredients</label>
-              <button onClick={addIngredientRow} className="text-xs text-accent hover:brightness-125">+ Add</button>
-            </div>
-            <div className="space-y-2">
-              {form.ingredients.map((ing, i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <input
-                    type="text"
-                    value={ing.name}
-                    onChange={(e) => updateIngredient(i, { name: e.target.value })}
-                    placeholder="Name"
-                    className={inputCls + ' flex-1'}
-                  />
-                  <input
-                    type="text"
-                    value={ing.quantity || ''}
-                    onChange={(e) => updateIngredient(i, { quantity: e.target.value })}
-                    placeholder="Qty"
-                    className={inputCls + ' w-20'}
-                  />
-                  <input
-                    type="text"
-                    value={ing.unit || ''}
-                    onChange={(e) => updateIngredient(i, { unit: e.target.value })}
-                    placeholder="Unit"
-                    className={inputCls + ' w-24'}
-                  />
-                  <button onClick={() => removeIngredient(i)} className="text-text-subtle hover:text-text text-sm px-1">×</button>
-                </div>
-              ))}
-              {form.ingredients.length === 0 && (
-                <p className="text-xs text-text-subtle">No ingredients yet. Optional — you can add them later.</p>
-              )}
-            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -406,7 +363,7 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
               Cancel
             </button>
             <button onClick={submit} disabled={saving || uploadingPhoto} className="flex-1 px-4 py-2 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-medium disabled:opacity-50">
-              {saving ? 'Saving...' : editingId ? 'Save changes' : 'Add meal'}
+              {saving ? 'Saving...' : 'Save changes'}
             </button>
           </div>
         </div>
@@ -439,9 +396,6 @@ export function RecipeLibrary({ initialRecipes }: { initialRecipes: Recipe[] }) 
                       {MEAL_TYPE_LABELS[mt]}
                     </span>
                   ))}
-                  {recipe.ingredients && recipe.ingredients.length > 0 && (
-                    <span className="text-xs text-text-muted">{recipe.ingredients.length} ingredient{recipe.ingredients.length === 1 ? '' : 's'}</span>
-                  )}
                   {recipe.url && <span className="text-xs text-text-muted">🔗 link</span>}
                   {!!recipe.kidsRating && (
                     <div className="flex items-center gap-1 text-xs text-text-muted">🧒 <StarRating value={recipe.kidsRating} size="sm" /></div>

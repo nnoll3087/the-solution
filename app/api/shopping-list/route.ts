@@ -16,7 +16,8 @@ function badWeek() {
 export async function GET(request: NextRequest) {
   const week = request.nextUrl.searchParams.get('week');
   if (!week || !DATE_RE.test(week)) return badWeek();
-  const list = await getShoppingList(week);
+  const forceRegenerate = request.nextUrl.searchParams.get('regenerate') === '1';
+  const list = await getShoppingList(week, { forceRegenerate });
   return NextResponse.json(list);
 }
 

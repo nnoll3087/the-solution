@@ -21,18 +21,24 @@ export function ShoppingList({
   const [extraItems, setExtraItems] = useState<ExtraItem[]>(initialExtraItems);
   const [newItemText, setNewItemText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
-  const load = useCallback((week: string) => {
-    setLoading(true);
-    fetch('/api/shopping-list?week=' + week)
+  const load = useCallback((week: string, regenerate?: boolean) => {
+    (regenerate ? setRegenerating : setLoading)(true);
+    const url = '/api/shopping-list?week=' + week + (regenerate ? '&regenerate=1' : '');
+    fetch(url)
       .then((r) => r.json())
       .then((data) => {
         setIngredients(data.ingredients || []);
         setExtraItems(data.extraItems || []);
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => (regenerate ? setRegenerating : setLoading)(false));
   }, []);
+
+  function regenerate() {
+    load(weekStart, true);
+  }
 
   function changeWeek(next: string) {
     setWeekStart(next);
@@ -127,7 +133,19 @@ export function ShoppingList({
             ›
           </button>
         </div>
-        <div className="text-text-muted text-sm font-medium">{weekLabel}</div>
+        <div className="flex items-center gap-3">
+          <div className="text-text-muted text-sm font-medium">{weekLabel}</div>
+          {ingredients.length > 0 && (
+            <button
+              onClick={regenerate}
+              disabled={regenerating}
+              className="text-xs text-accent hover:brightness-125 disabled:opacity-50 whitespace-nowrap"
+              title="Re-run the AI pass over this week's meal notes"
+            >
+              {regenerating ? 'Regenerating...' : '↻ Regenerate'}
+            </button>
+          )}
+        </div>
       </div>
 
       {isEmpty && !loading ? (

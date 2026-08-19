@@ -1,9 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import imageCompression from 'browser-image-compression';
 import { suggestEmoji } from '@/lib/mealEmoji';
-import { MEAL_TYPES, MEAL_TYPE_LABELS, MealType } from '@/lib/mealTypes';
+import { MealType, MEAL_TYPE_LABELS } from '@/lib/mealTypes';
+import { MealCreateFlow, MealCreatePayload } from './MealCreateFlow';
 
 type Recipe = {
   id: string;
@@ -14,13 +14,7 @@ type Recipe = {
   parentsRating?: number;
 };
 
-export type CreatePayload = {
-  title: string;
-  mealTypes: MealType[];
-  notes?: string;
-  url?: string;
-  photoUrl?: string;
-};
+export type CreatePayload = MealCreatePayload;
 
 type CurrentMeal = { recipeId: string; title: string; emoji: string; kidsRating?: number; parentsRating?: number };
 
@@ -48,14 +42,6 @@ export function MealSlotPicker({
   onRemove,
   onClose,
 }: Props) {
-  const [title, setTitle] = useState('');
-  const [mealTypes, setMealTypes] = useState<MealType[]>([mealType]);
-  const [notes, setNotes] = useState('');
-  const [url, setUrl] = useState('');
-  const [photoUrl, setPhotoUrl] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   // A filled slot opens straight to a compact summary (view/edit/remove) —
   // no keyboard, no form — instead of the full create/assign form. "Change"
@@ -70,55 +56,6 @@ export function MealSlotPicker({
     }
     return recipes.filter((r) => r.mealTypes.includes(mealType));
   }, [recipes, query, mealType]);
-
-  function toggleMealType(mt: MealType) {
-    setMealTypes((prev) => (prev.includes(mt) ? prev.filter((x) => x !== mt) : [...prev, mt]));
-  }
-
-  async function handlePhotoChange(file: File | undefined) {
-    if (!file) return;
-    setUploading(true);
-    setError(null);
-    try {
-      const compressed = await imageCompression(file, { maxSizeMB: 1, maxWidthOrHeight: 2000, useWebWorker: true });
-      const form = new FormData();
-      form.append('file', new File([compressed], file.name, { type: compressed.type }));
-      const res = await fetch('/api/recipes/photo', { method: 'POST', body: form });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Photo upload failed');
-      setPhotoUrl(data.url);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Photo upload failed');
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  async function submit() {
-    if (!title.trim()) {
-      setError('Give it a name');
-      return;
-    }
-    if (mealTypes.length === 0) {
-      setError('Pick at least one meal type');
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
-      await onCreateAndAssign({
-        title: title.trim(),
-        mealTypes,
-        notes: notes.trim() || undefined,
-        url: url.trim() || undefined,
-        photoUrl: photoUrl || undefined,
-      });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save meal');
-    } finally {
-      setSaving(false);
-    }
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
@@ -176,90 +113,8 @@ export function MealSlotPicker({
               ‹ Back to {current.emoji} {current.title}
             </button>
           )}
-          {error && (
-            <div className="bg-danger-themed/20 border border-danger-themed/40 rounded-md px-3 py-2 text-sm text-danger-themed">
-              {error}
-            </div>
-          )}
 
-          <div>
-            <label className={labelCls}>What&apos;s the meal?</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Taco night"
-              className={inputCls}
-            />
-          </div>
-
-          <div>
-            <label className={labelCls}>Meal type</label>
-            <div className="flex flex-wrap gap-1.5">
-              {MEAL_TYPES.map((mt) => (
-                <button
-                  key={mt}
-                  type="button"
-                  onClick={() => toggleMealType(mt)}
-                  className={
-                    'px-3 py-1.5 rounded-full text-xs font-medium border transition ' +
-                    (mealTypes.includes(mt)
-                      ? 'bg-accent text-white border-accent'
-                      : 'bg-bg/50 text-text-muted border-border-themed hover:text-text')
-                  }
-                >
-                  {MEAL_TYPE_LABELS[mt]}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className={labelCls}>Notes (optional)</label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-              className={inputCls + ' resize-none'}
-              placeholder="Prep steps, tips, whatever's useful"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className={labelCls}>Link (optional)</label>
-              <input type="text" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Recipe URL" className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Photo (optional)</label>
-              {photoUrl ? (
-                <div className="flex items-center gap-2">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={photoUrl} alt="" className="w-9 h-9 rounded object-cover" />
-                  <button onClick={() => setPhotoUrl('')} className="text-xs text-text-subtle hover:text-text">Remove</button>
-                </div>
-              ) : (
-                <label className={inputCls + ' flex items-center justify-center cursor-pointer text-text-subtle'}>
-                  {uploading ? 'Uploading...' : '+ Add'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    disabled={uploading}
-                    onChange={(e) => handlePhotoChange(e.target.files?.[0])}
-                  />
-                </label>
-              )}
-            </div>
-          </div>
-
-          <button
-            onClick={submit}
-            disabled={saving || uploading}
-            className="w-full px-4 py-2.5 rounded-lg bg-accent hover:bg-accent-hover text-white text-sm font-medium disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Add meal'}
-          </button>
+          <MealCreateFlow defaultMealTypes={[mealType]} onCreate={onCreateAndAssign} submitLabel="Add meal" />
 
           <div className="pt-2 border-t border-border-themed">
             <label className={labelCls}>Or choose one you&apos;ve made before</label>

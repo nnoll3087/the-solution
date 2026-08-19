@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRecipes, createRecipe, updateRecipe, deleteRecipe, Ingredient } from '@/lib/recipes';
+import { getRecipes, createRecipe, updateRecipe, deleteRecipe } from '@/lib/recipes';
 import { suggestEmoji } from '@/lib/mealEmoji';
 import { MealType, isMealType } from '@/lib/mealTypes';
 
@@ -7,19 +7,6 @@ function cleanMealTypes(input: unknown): MealType[] | null {
   if (!Array.isArray(input)) return null;
   const cleaned = Array.from(new Set(input.filter(isMealType)));
   return cleaned.length > 0 ? cleaned : null;
-}
-
-function cleanIngredients(input: unknown): Ingredient[] | undefined {
-  if (!Array.isArray(input)) return undefined;
-  const cleaned = input
-    .filter((i): i is Record<string, unknown> => !!i && typeof i === 'object')
-    .map((i) => ({
-      name: typeof i.name === 'string' ? i.name.trim() : '',
-      quantity: typeof i.quantity === 'string' && i.quantity.trim() ? i.quantity.trim() : undefined,
-      unit: typeof i.unit === 'string' && i.unit.trim() ? i.unit.trim() : undefined,
-    }))
-    .filter((i) => i.name.length > 0);
-  return cleaned.length > 0 ? cleaned : undefined;
 }
 
 export async function GET(request: NextRequest) {
@@ -44,7 +31,6 @@ export async function POST(request: NextRequest) {
     emoji: typeof body.emoji === 'string' && body.emoji.trim() ? body.emoji.trim() : suggestEmoji(title),
     mealTypes,
     notes: typeof body.notes === 'string' && body.notes.trim() ? body.notes.trim() : undefined,
-    ingredients: cleanIngredients(body.ingredients),
     url: typeof body.url === 'string' && body.url.trim() ? body.url.trim() : undefined,
     sourceLabel: typeof body.sourceLabel === 'string' && body.sourceLabel.trim() ? body.sourceLabel.trim() : undefined,
     photoUrl: typeof body.photoUrl === 'string' && body.photoUrl.trim() ? body.photoUrl.trim() : undefined,
@@ -64,7 +50,6 @@ export async function PATCH(request: NextRequest) {
     patch.mealTypes = mealTypes;
   }
   if ('notes' in body) patch.notes = typeof body.notes === 'string' && body.notes.trim() ? body.notes.trim() : undefined;
-  if ('ingredients' in body) patch.ingredients = cleanIngredients(body.ingredients);
   if ('url' in body) patch.url = typeof body.url === 'string' && body.url.trim() ? body.url.trim() : undefined;
   if ('sourceLabel' in body) patch.sourceLabel = typeof body.sourceLabel === 'string' && body.sourceLabel.trim() ? body.sourceLabel.trim() : undefined;
   if ('photoUrl' in body) patch.photoUrl = typeof body.photoUrl === 'string' && body.photoUrl.trim() ? body.photoUrl.trim() : undefined;
