@@ -6,6 +6,7 @@ import { CustodySettings } from '@/components/CustodySettings';
 import { ExclusionSettings } from '@/components/ExclusionSettings';
 import { PhotoManager } from '@/components/PhotoManager';
 import { MealsVisibilityToggle } from '@/components/MealsVisibilityToggle';
+import { ForceRefreshButton } from '@/components/ForceRefreshButton';
 import { PageHeader } from '@/components/PageHeader';
 import { SettingsTabs } from '@/components/SettingsTabs';
 
@@ -71,6 +72,14 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
       <div className="bg-surface/80 backdrop-blur rounded-lg p-6 border border-border-themed">
         <h2 className="text-lg font-semibold mb-4">Meals</h2>
         <MealsVisibilityToggle initialVisible={mealsVisible} />
+      </div>
+      <div className="bg-surface/80 backdrop-blur rounded-lg p-6 border border-border-themed">
+        <h2 className="text-lg font-semibold mb-2">Kiosk</h2>
+        <p className="text-text-muted text-sm mb-4">
+          If the display looks stale after an update, force a fresh reload — clears any cached
+          files and reloads the calendar. No keyboard needed.
+        </p>
+        <ForceRefreshButton />
       </div>
     </div>
   );
