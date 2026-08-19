@@ -53,7 +53,7 @@ export const ZenMode = forwardRef<ZenModeHandle, Props>(function ZenMode({ child
       )}
 
       {zen && (
-        <div onClick={() => setZen(false)} className="fixed inset-0 z-40 cursor-pointer">
+        <div onClick={() => setZen(false)} className="fixed inset-0 z-40 cursor-none">
           <span
             className={
               'absolute bottom-8 inset-x-0 text-center text-sm text-text-subtle transition-opacity duration-1000 ' +

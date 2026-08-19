@@ -263,7 +263,7 @@ export const Slideshow = forwardRef<SlideshowHandle, { hideTrigger?: boolean }>(
   return (
     <div
       className={
-        'fixed inset-0 z-50 bg-black overflow-hidden cursor-pointer select-none touch-none transition-opacity ' +
+        'fixed inset-0 z-50 bg-black overflow-hidden cursor-none select-none touch-none transition-opacity ' +
         (visible ? 'opacity-100 duration-[2000ms]' : 'opacity-0 duration-500')
       }
       onPointerDown={(e) => {
