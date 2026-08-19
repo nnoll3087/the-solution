@@ -119,7 +119,7 @@ export function CalendarSelector({
                         type="text"
                         defaultValue={config?.displayName}
                         onBlur={(e) => save(cal, { displayName: e.target.value })}
-                        className="bg-bg/40 text-text border border-border-themed rounded-md px-2 py-1.5 text-sm flex-1 min-w-0"
+                        className="bg-bg/40 text-text border border-border-themed rounded-md px-2 py-1.5 text-base sm:text-sm flex-1 min-w-0"
                       />
                     ) : (
                       <span className="text-text-muted flex-1 truncate">{cal.summary}</span>

@@ -35,7 +35,7 @@ type Props = {
   onClose: () => void;
 };
 
-const inputCls = 'w-full bg-bg/50 border border-border-themed rounded-md px-3 py-2 text-text text-sm';
+const inputCls = 'w-full bg-bg/50 border border-border-themed rounded-md px-3 py-2 text-text text-base sm:text-sm';
 const labelCls = 'block text-xs uppercase tracking-wide text-text-muted mb-1';
 
 export function MealSlotPicker({

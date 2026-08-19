@@ -336,7 +336,7 @@ function QueueSettings({
                   setDefaultHours(hours);
                   saveDefaults(defaultMode, hours);
                 }}
-                className="bg-bg/50 border border-border-themed rounded-md px-2 py-1.5 text-sm text-text w-16"
+                className="bg-bg/50 border border-border-themed rounded-md px-2 py-1.5 text-base sm:text-sm text-text w-16"
               />
               <span className="text-sm text-text-muted">{defaultMode}</span>
             </>
@@ -378,7 +378,7 @@ const hours = pref?.clearAfterHours ?? defaultHours;
                           const newHours = mode === 'days' ? v * 24 : v;
                           savePerson(person, mode, newHours);
                         }}
-                        className="bg-bg/50 border border-border-themed rounded-md px-2 py-1.5 text-sm text-text w-16"
+                        className="bg-bg/50 border border-border-themed rounded-md px-2 py-1.5 text-base sm:text-sm text-text w-16"
                       />
                       <span className="text-text-muted">{mode}</span>
                     </>

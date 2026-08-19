@@ -197,7 +197,7 @@ export function ShoppingList({
             if (e.key === 'Enter') addItem();
           }}
           placeholder="Add an item..."
-          className="flex-1 bg-bg/50 border border-border-themed rounded-md px-3 py-2 text-text text-sm"
+          className="flex-1 bg-bg/50 border border-border-themed rounded-md px-3 py-2 text-text text-base sm:text-sm"
         />
         <button
           onClick={addItem}

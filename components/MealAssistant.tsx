@@ -95,7 +95,7 @@ export function MealAssistant() {
             if (e.key === 'Enter') send(input);
           }}
           placeholder="I'm thinking about an Asian-inspired dinner..."
-          className="flex-1 bg-bg/50 border border-border-themed rounded-md px-3 py-2 text-text text-sm"
+          className="flex-1 bg-bg/50 border border-border-themed rounded-md px-3 py-2 text-text text-base sm:text-sm"
           disabled={sending}
         />
         <button
