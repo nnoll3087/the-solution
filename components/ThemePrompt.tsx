@@ -75,7 +75,7 @@ export function ThemePrompt() {
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
               placeholder="ocean, rainbow, space..."
-              className="w-full bg-bg/50 border border-border-themed rounded-md px-3 py-2 text-text text-sm"
+              className="w-full bg-bg/50 border border-border-themed rounded-md px-3 py-2 text-text text-base sm:text-sm"
               autoFocus
             />
             <p className="text-xs text-text-subtle mt-1">Press Enter to apply. Takes ~10 seconds.</p>
@@ -125,7 +125,7 @@ export function ThemePrompt() {
                         onKeyDown={(e) => { if (e.key === 'Enter') saveBalance(); }}
                         placeholder="20.00"
                         autoFocus
-                        className="w-16 bg-bg/50 border border-border-themed rounded px-1.5 py-0.5 text-text"
+                        className="w-16 bg-bg/50 border border-border-themed rounded px-1.5 py-0.5 text-text text-base sm:text-xs"
                       />
                       <button onClick={saveBalance} className="text-accent hover:brightness-125">Save</button>
                     </span>
