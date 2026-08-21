@@ -15,6 +15,13 @@ const IDLE_MS = 15 * 60 * 1000;
 const PHOTO_MS = 20 * 1000;
 const EXIT_FADE_MS = 500;
 const SWIPE_MIN_PX = 60;
+const POOL_REFRESH_MS = 15 * 60 * 1000;
+
+function samePhotoSet(a: Photo[], b: Photo[]): boolean {
+  if (a.length !== b.length) return false;
+  const ids = new Set(a.map((p) => p.id));
+  return b.every((p) => ids.has(p.id));
+}
 
 // Shuffle biased toward recent uploads: weight decays with age in days
 function weightedShuffle(photos: Photo[]): number[] {
@@ -149,6 +156,36 @@ export const Slideshow = forwardRef<SlideshowHandle, { hideTrigger?: boolean }>(
       exitingRef.current = false;
     }, EXIT_FADE_MS);
   }
+
+  // Background photo-pool refresh: the slideshow can run uninterrupted for a
+  // very long time once active (nothing re-fetches until the next idle-timer
+  // activation), so a kiosk left alone overnight would otherwise loop the
+  // same frozen set indefinitely and never pick up new uploads. Polling here
+  // — active or not — means new photos fold into a running session directly
+  // instead of waiting on a full page reload.
+  useEffect(() => {
+    async function refreshPool() {
+      try {
+        const res = await fetch('/api/photos');
+        const data = await res.json();
+        const photos: Photo[] = data.photos || [];
+        if (samePhotoSet(photos, photosRef.current)) return;
+        photosRef.current = photos;
+        if (!active) return;
+        if (photos.length === 0) {
+          exit();
+          return;
+        }
+        orderRef.current = weightedShuffle(photos);
+        posRef.current = 0;
+        showSlide(0);
+      } catch {
+        // Leave the current pool in place; try again next interval.
+      }
+    }
+    const iv = setInterval(refreshPool, POOL_REFRESH_MS);
+    return () => clearInterval(iv);
+  }, [active]);
 
   // Idle timer: only armed while the slideshow is not showing
   useEffect(() => {

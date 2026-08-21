@@ -7,6 +7,7 @@ import { MealsMenu } from './MealsMenu';
 import { ThemePrompt } from './ThemePrompt';
 import { ZenMode, ZenModeHandle } from './ZenMode';
 import { Slideshow, SlideshowHandle } from './Slideshow';
+import { DailyRefresh } from './DailyRefresh';
 import { headerIconButtonCls as iconButtonCls } from '@/lib/uiClasses';
 
 export function HomeShell({ mealsVisible }: { mealsVisible: boolean }) {
@@ -41,6 +42,7 @@ export function HomeShell({ mealsVisible }: { mealsVisible: boolean }) {
       </ZenMode>
       {/* Idle photo frame: home page only, per the kiosk requirement */}
       <Slideshow ref={slideshowRef} hideTrigger />
+      <DailyRefresh />
     </>
   );
 }

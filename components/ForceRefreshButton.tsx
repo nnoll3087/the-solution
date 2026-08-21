@@ -1,23 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { hardRefresh } from '@/lib/hardRefresh';
 
 export function ForceRefreshButton() {
   const [refreshing, setRefreshing] = useState(false);
 
   async function forceRefresh() {
     setRefreshing(true);
-    if ('caches' in window) {
-      try {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
-      } catch {
-        // Cache Storage isn't available everywhere; the cache-busting reload below still works.
-      }
-    }
-    const url = new URL('/', window.location.origin);
-    url.searchParams.set('_', Date.now().toString());
-    window.location.href = url.toString();
+    await hardRefresh('/');
   }
 
   return (
