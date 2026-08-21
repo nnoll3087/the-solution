@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { toDateKey, startOfWeek } from '@/lib/dates';
 import { MEAL_TYPES, MEAL_TYPE_LABELS, MealType } from '@/lib/mealTypes';
 import { MealSlotPicker, CreatePayload } from './MealSlotPicker';
@@ -36,6 +36,20 @@ export function MealPlanner({ initialRecipes, initialPlan }: { initialRecipes: R
   const [anchor, setAnchor] = useState(() => startOfWeek(new Date()));
   const [slot, setSlot] = useState<{ date: string; mealType: MealType } | null>(null);
 
+  // The meal-plan store is a whole-document read-modify-write with no locking
+  // (fine for normal sequential use), so two requests for the same slot fired
+  // close together — e.g. remove then immediately re-add — can complete out
+  // of order and silently overwrite each other. Queuing every /api/meal-plan
+  // mutation through this ref forces them to run strictly one at a time, in
+  // the order the user triggered them, so the last action always wins.
+  const mealPlanQueueRef = useRef<Promise<void>>(Promise.resolve());
+
+  function queueMealPlanMutation(request: () => Promise<Response>): Promise<void> {
+    const run = mealPlanQueueRef.current.then(() => request().catch(() => {})).then(() => undefined);
+    mealPlanQueueRef.current = run;
+    return run;
+  }
+
   const days = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(anchor);
@@ -69,11 +83,13 @@ export function MealPlanner({ initialRecipes, initialPlan }: { initialRecipes: R
     if (!recipe) return;
     setPlan((prev) => ({ ...prev, [slotKey(date, mealType)]: { recipeId, mealType, title: recipe.title, emoji: recipe.emoji } }));
     closeSlot();
-    await fetch('/api/meal-plan', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date, mealType, recipeId }),
-    }).catch(() => {});
+    await queueMealPlanMutation(() =>
+      fetch('/api/meal-plan', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, mealType, recipeId }),
+      })
+    );
   }
 
   async function createAndAssign(payload: CreatePayload) {
@@ -93,11 +109,13 @@ export function MealPlanner({ initialRecipes, initialPlan }: { initialRecipes: R
       [slotKey(date, mealType)]: { recipeId: recipe.id, mealType, title: recipe.title, emoji: recipe.emoji },
     }));
     closeSlot();
-    await fetch('/api/meal-plan', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date, mealType, recipeId: recipe.id }),
-    }).catch(() => {});
+    await queueMealPlanMutation(() =>
+      fetch('/api/meal-plan', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, mealType, recipeId: recipe.id }),
+      })
+    );
   }
 
   async function removeSlot() {
@@ -109,11 +127,13 @@ export function MealPlanner({ initialRecipes, initialPlan }: { initialRecipes: R
       return next;
     });
     closeSlot();
-    await fetch('/api/meal-plan', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date, mealType }),
-    }).catch(() => {});
+    await queueMealPlanMutation(() =>
+      fetch('/api/meal-plan', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, mealType }),
+      })
+    );
   }
 
   const weekLabel = (() => {
