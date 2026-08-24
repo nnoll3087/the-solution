@@ -25,9 +25,13 @@ export async function getJoinedMealPlan(): Promise<Record<string, JoinedMealPlan
   const recipes = await getRecipesByIds(recipeIds);
 
   const joined: Record<string, JoinedMealPlanEntry> = {};
+  const stale: string[] = [];
   for (const [k, entry] of Object.entries(plan)) {
     const recipe = recipes[entry.recipeId];
-    if (!recipe) continue;
+    if (!recipe) {
+      stale.push(k);
+      continue;
+    }
     joined[k] = {
       recipeId: entry.recipeId,
       mealType: entry.mealType,
@@ -36,6 +40,14 @@ export async function getJoinedMealPlan(): Promise<Record<string, JoinedMealPlan
       kidsRating: recipe.kidsRating,
       parentsRating: recipe.parentsRating,
     };
+  }
+  // A slot whose recipe was deleted elsewhere is a dangling pointer, not a
+  // real entry — drop it from the store so it stops silently disappearing
+  // from every read instead of lingering as an invisible landmine.
+  if (stale.length > 0) {
+    const store = await readStore('meal-plan', DEFAULT_STORE);
+    for (const k of stale) delete store[k];
+    await writeStore('meal-plan', store);
   }
   return joined;
 }

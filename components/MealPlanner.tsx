@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
-import { toDateKey, startOfWeek } from '@/lib/dates';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { toDateKey, startOfWeek, parseLocalDate } from '@/lib/dates';
 import { MEAL_TYPES, MEAL_TYPE_LABELS, MealType } from '@/lib/mealTypes';
 import { MealSlotPicker, CreatePayload } from './MealSlotPicker';
+
+const ANCHOR_STORAGE_KEY = 'solution-meal-planner-week';
 
 type Recipe = {
   id: string;
@@ -36,6 +38,29 @@ export function MealPlanner({ initialRecipes, initialPlan }: { initialRecipes: R
   const [anchor, setAnchor] = useState(() => startOfWeek(new Date()));
   const [slot, setSlot] = useState<{ date: string; mealType: MealType } | null>(null);
 
+  // Full navigations to/from this tab (see MealsMenu) remount this component,
+  // so without restoring the last-viewed week it always snaps back to "this
+  // week" on return — making meals added for another week look like they
+  // vanished, even though they saved fine. Restoring in an effect (rather
+  // than the useState initializer) keeps the first client render matching
+  // the server-rendered "this week" and avoids a hydration mismatch.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(ANCHOR_STORAGE_KEY);
+      if (saved) {
+        const parsed = parseLocalDate(saved);
+        if (!isNaN(parsed.getTime())) setAnchor(startOfWeek(parsed));
+      }
+    } catch {}
+  }, []);
+
+  function persistAnchor(date: Date) {
+    setAnchor(date);
+    try {
+      localStorage.setItem(ANCHOR_STORAGE_KEY, toDateKey(date));
+    } catch {}
+  }
+
   // The meal-plan store is a whole-document read-modify-write with no locking
   // (fine for normal sequential use), so two requests for the same slot fired
   // close together — e.g. remove then immediately re-add — can complete out
@@ -61,15 +86,15 @@ export function MealPlanner({ initialRecipes, initialPlan }: { initialRecipes: R
   function goPrevWeek() {
     const d = new Date(anchor);
     d.setDate(d.getDate() - 7);
-    setAnchor(d);
+    persistAnchor(d);
   }
   function goNextWeek() {
     const d = new Date(anchor);
     d.setDate(d.getDate() + 7);
-    setAnchor(d);
+    persistAnchor(d);
   }
   function goThisWeek() {
-    setAnchor(startOfWeek(new Date()));
+    persistAnchor(startOfWeek(new Date()));
   }
 
   function closeSlot() {

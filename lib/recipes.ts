@@ -26,9 +26,13 @@ const DEFAULT_STORE: RecipeStore = {};
 
 // One-time fold of the old structured ingredients array into the freeform
 // notes field, since ingredients now live as plain pasted/typed text there.
-// Persists the migrated record so this only runs once per recipe.
-async function migrateIngredients(store: RecipeStore): Promise<boolean> {
-  let changed = false;
+// In-memory only — every read (getRecipes/getRecipe/getRecipesByIds) used to
+// persist this as a side effect, which meant an ordinary read could win a
+// whole-document read-modify-write race against a concurrent create/update
+// and silently wipe it out. Recipes get upgraded on the way out of every read
+// instead; a legacy record re-normalizes each time until something else
+// (an edit, a rating) naturally rewrites it for real.
+function migrateIngredients(store: RecipeStore): void {
   for (const recipe of Object.values(store)) {
     if (!recipe.ingredients || recipe.ingredients.length === 0) continue;
     const lines = recipe.ingredients
@@ -39,16 +43,12 @@ async function migrateIngredients(store: RecipeStore): Promise<boolean> {
       recipe.notes = recipe.notes ? lines + '\n\n' + recipe.notes : lines;
     }
     delete recipe.ingredients;
-    changed = true;
   }
-  return changed;
 }
 
 async function getMigratedStore(): Promise<RecipeStore> {
   const store = await readStore('recipes', DEFAULT_STORE);
-  if (await migrateIngredients(store)) {
-    await writeStore('recipes', store);
-  }
+  migrateIngredients(store);
   return store;
 }
 
