@@ -39,6 +39,10 @@ export async function getJoinedMealPlan(): Promise<Record<string, JoinedMealPlan
       emoji: recipe.emoji,
       kidsRating: recipe.kidsRating,
       parentsRating: recipe.parentsRating,
+      notes: recipe.notes,
+      photoUrl: recipe.photoUrl,
+      url: recipe.url,
+      sourceLabel: recipe.sourceLabel,
     };
   }
   // A slot whose recipe was deleted elsewhere is a dangling pointer, not a

@@ -21,6 +21,10 @@ export type JoinedMealPlanEntry = {
   emoji: string;
   kidsRating?: number;
   parentsRating?: number;
+  notes?: string;
+  photoUrl?: string;
+  url?: string;
+  sourceLabel?: string;
 };
 
 // Groups the flat `date:mealType` -> entry map (as returned by GET
