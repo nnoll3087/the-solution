@@ -3,6 +3,10 @@ import { toDateKey, startOfWeek } from '@/lib/dates';
 import { ShoppingList } from '@/components/ShoppingList';
 import { PageHeader } from '@/components/PageHeader';
 
+// See app/meals/page.tsx: reads Postgres directly, so it must be forced
+// dynamic or it prerenders once at build time and never sees new meals.
+export const dynamic = 'force-dynamic';
+
 export default async function ShoppingListPage() {
   const weekStart = toDateKey(startOfWeek(new Date()));
   const { ingredients, extraItems } = await getShoppingList(weekStart);

@@ -4,6 +4,12 @@ import { getJoinedMealPlan } from '@/lib/mealPlan';
 import { MealPlanner } from '@/components/MealPlanner';
 import { PageHeader } from '@/components/PageHeader';
 
+// Reads recipes/meal-plan straight from Postgres via lib/storage.ts (not
+// fetch()), so Next has no way to see this as live data and will otherwise
+// prerender the page once at build time and freeze it — every meal added
+// after that deploy silently stops showing here until the next deploy.
+export const dynamic = 'force-dynamic';
+
 export default async function MealsPage() {
   const [recipes, plan] = await Promise.all([getRecipes(), getJoinedMealPlan()]);
 

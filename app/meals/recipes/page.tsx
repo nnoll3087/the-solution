@@ -2,6 +2,10 @@ import { getRecipes } from '@/lib/recipes';
 import { RecipeLibrary } from '@/components/RecipeLibrary';
 import { PageHeader } from '@/components/PageHeader';
 
+// See app/meals/page.tsx: reads Postgres directly, so it must be forced
+// dynamic or it prerenders once at build time and never sees new recipes.
+export const dynamic = 'force-dynamic';
+
 export default async function RecipeLibraryPage() {
   const recipes = await getRecipes();
 
